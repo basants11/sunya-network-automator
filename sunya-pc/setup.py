@@ -49,7 +49,8 @@ def main():
         subprocess.run([
             sys.executable, '-m', 'pip', 'install',
             'requests', 'psutil', 'speedtest-cli', 'ping3', 'pandas',
-            'matplotlib', 'seaborn', 'fpdf', 'pytest', 'scipy', 'numpy'
+            'matplotlib', 'seaborn', 'fpdf', 'pytest', 'scipy', 'numpy',
+            'pyautogui'
         ], check=True)
         
         if current_os == 'windows':

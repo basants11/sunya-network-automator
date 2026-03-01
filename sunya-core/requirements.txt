@@ -9,3 +9,4 @@ fpdf
 pytest
 scipy
 numpy
+pyautogui
