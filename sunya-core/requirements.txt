@@ -1,0 +1,11 @@
+requests
+psutil
+speedtest-cli
+ping3
+pandas
+matplotlib
+seaborn
+fpdf
+pytest
+scipy
+numpy
