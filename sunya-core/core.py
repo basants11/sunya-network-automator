@@ -36,6 +36,15 @@ class SunyaCore:
         self.report_dir = None
         self.network_fingerprint = None
         self.diagnostics_results = {}
+        self.test_config = {
+            'test_depth': 'standard',  # 'quick', 'standard', 'deep'
+            'max_test_duration': 300,  # 5 minutes
+            'short_circuit': True,
+            'cache_enabled': True,
+            'confidence_threshold': 0.7  # 70% confidence required for diagnosis
+        }
+        self.test_cache = {}
+        self.start_time = None
         
     def generate_network_fingerprint(self) -> Dict[str, Any]:
         """Generate unique network fingerprint for duplicate detection"""
@@ -159,23 +168,97 @@ class SunyaCore:
             logger.error(f"Failed to create report directory: {e}")
             return None
             
+    def watchdog_monitor(self, future, task_name: str):
+        """Monitor a task future with watchdog timeout and recovery"""
+        try:
+            result = future.result(timeout=self.test_config['max_test_duration'])
+            return result
+        except TimeoutError:
+            logger.error(f"{task_name} timeout - terminating and attempting recovery")
+            # Attempt to recover from timeout
+            return self.recover_from_timeout(task_name)
+        except Exception as e:
+            logger.error(f"{task_name} failed - {e}")
+            return self.recover_from_failure(task_name, e)
+    
+    def recover_from_timeout(self, task_name: str):
+        """Attempt recovery from task timeout"""
+        recovery_methods = {
+            'ping': self.run_quick_ping_tests,
+            'traceroute': self.run_simple_traceroute,
+            'speedtest': self.run_quick_speedtest,
+            'mtr': None  # No fallback for MTR
+        }
+        
+        recovery_func = recovery_methods.get(task_name)
+        if recovery_func:
+            logger.warning(f"Attempting recovery for {task_name}")
+            try:
+                return recovery_func()
+            except Exception as e:
+                logger.error(f"Recovery for {task_name} failed - {e}")
+        
+        # Default recovery: return error result
+        return {'error': f"Timeout - {task_name} failed to complete in time"}
+    
+    def recover_from_failure(self, task_name: str, exception: Exception):
+        """Attempt recovery from task failure"""
+        return {'error': str(exception)}
+    
+    def run_simple_traceroute(self):
+        """Simple traceroute fallback with reduced packet count"""
+        logger.warning("Using simple traceroute fallback")
+        return self.run_traceroute(packet_count=3)
+    
+    def run_quick_speedtest(self):
+        """Quick speedtest fallback with reduced duration"""
+        logger.warning("Using quick speedtest fallback")
+        return self.run_speedtest(duration=10)
+    
+    def is_network_available(self) -> bool:
+        """Check if internet connectivity is available"""
+        logger.info("Checking network connectivity...")
+        
+        try:
+            import socket
+            # Try to connect to Google DNS
+            socket.create_connection(("8.8.8.8", 53), timeout=5)
+            logger.info("Internet connectivity available")
+            return True
+        except Exception as e:
+            logger.warning(f"No internet connectivity: {e}")
+            return False
+    
     def run_parallel_diagnostics(self) -> Dict[str, Any]:
-        """Run all diagnostic modules in parallel with optimized performance"""
-        logger.info("Starting parallel diagnostics...")
+        """Run all diagnostic modules with intelligent parallel execution and smart short-circuiting"""
+        logger.info("Starting intelligent parallel diagnostics...")
         
         if not self.report_dir:
             logger.error("No report directory created")
             return {}
+            
+        self.start_time = time.time()
         
-        # Define diagnostic tasks
-        diagnostic_tasks = [
-            ('ping', self.run_ping_tests),
-            ('traceroute', self.run_traceroute),
-            ('speedtest', self.run_speedtest),
-            ('mtr', self.run_mtr)
-        ]
+        # Check cache validity first
+        self.load_cache()
         
-        results = {}
+        # Check if network is available
+        network_available = self.is_network_available()
+        
+        if not network_available:
+            logger.warning("No internet connectivity, running offline diagnostics only")
+            return self.run_offline_diagnostics()
+            
+        # Run quick initial tests to determine network quality
+        initial_results = self.run_initial_quick_tests()
+        
+        # Adjust test depth based on initial results
+        self.adjust_test_depth(initial_results)
+        
+        # Define diagnostic tasks with priority
+        diagnostic_tasks = self.get_priority_tasks()
+        
+        results = initial_results.copy()
         
         try:
             # Use ProcessPoolExecutor for better parallelism (CPU bound tasks)
@@ -186,27 +269,289 @@ class SunyaCore:
             max_workers = min(multiprocessing.cpu_count() * 2, 8)  # Cap at 8 workers
             
             with ProcessPoolExecutor(max_workers=max_workers) as executor:
-                # Submit all tasks
+                # Submit all tasks with watchdog monitoring
                 future_to_task = {executor.submit(task): name for name, task in diagnostic_tasks}
                 
-                # Collect results
+                # Collect results with watchdog monitoring
                 for future in as_completed(future_to_task):
                     task_name = future_to_task[future]
                     try:
-                        result = future.result(timeout=120)  # Reduce timeout to 2 minutes
+                        # Check for test timeout
+                        time_elapsed = time.time() - self.start_time
+                        if time_elapsed > self.test_config['max_test_duration']:
+                            logger.warning("Test duration exceeded, stopping diagnostics")
+                            break
+                            
+                        # Monitor task with watchdog
+                        result = self.watchdog_monitor(future, task_name)
                         results[task_name] = result
-                        logger.info(f"{task_name} completed successfully")
+                        
+                        if 'error' in result:
+                            logger.warning(f"{task_name} completed with errors")
+                        else:
+                            logger.info(f"{task_name} completed successfully")
+                        
+                        # Smart short-circuiting: Stop tests if critical failures detected
+                        if self.test_config['short_circuit'] and self.should_stop_early(results):
+                            logger.warning("Critical failure detected, stopping further diagnostics")
+                            break
+                            
                     except Exception as e:
                         logger.error(f"{task_name} failed: {e}")
                         results[task_name] = {'error': str(e)}
                         
             self.diagnostics_results = results
             logger.info("All diagnostics completed")
+            
+            # Save cache for next run
+            self.save_cache()
+            
             return results
             
         except Exception as e:
             logger.error(f"Parallel diagnostics failed: {e}")
             return {}
+    
+    def run_initial_quick_tests(self) -> Dict[str, Any]:
+        """Run quick initial tests (30 seconds max) to determine network quality"""
+        logger.info("Running quick initial tests...")
+        
+        initial_tests = [
+            ('quick_ping', self.run_quick_ping_tests),
+            ('dns_resolution', self.run_dns_resolution_tests),
+            ('gateway_check', self.run_gateway_check)
+        ]
+        
+        results = {}
+        
+        try:
+            from concurrent.futures import ThreadPoolExecutor
+            with ThreadPoolExecutor(max_workers=3) as executor:
+                future_to_task = {executor.submit(task): name for name, task in initial_tests}
+                
+                for future in as_completed(future_to_task):
+                    task_name = future_to_task[future]
+                    try:
+                        result = future.result(timeout=10)
+                        results[task_name] = result
+                        logger.info(f"{task_name} completed")
+                    except Exception as e:
+                        logger.error(f"{task_name} failed: {e}")
+                        results[task_name] = {'error': str(e)}
+                        
+        except Exception as e:
+            logger.error(f"Initial tests failed: {e}")
+            
+        return results
+    
+    def run_quick_ping_tests(self) -> Dict[str, Any]:
+        """Run quick ping tests with minimal packets"""
+        from ping3 import ping
+        
+        targets = {
+            'gateway': self.network_fingerprint.get('gateway', '192.168.1.1'),
+            'google_dns': '8.8.8.8'
+        }
+        
+        results = {}
+        
+        for target_name, target_ip in targets.items():
+            if not target_ip or target_ip == '':
+                continue
+                
+            logger.info(f"Quick pinging {target_name} ({target_ip})")
+            
+            try:
+                import subprocess
+                
+                if self.platform == 'windows':
+                    output = subprocess.check_output(
+                        ['ping', '-n', '3', '-l', '56', target_ip],  # 3 packets, small size
+                        universal_newlines=True,
+                        stderr=subprocess.STDOUT,
+                        timeout=5
+                    )
+                else:
+                    output = subprocess.check_output(
+                        ['ping', '-c', '3', '-s', '56', target_ip],  # 3 packets, small size
+                        universal_newlines=True,
+                        stderr=subprocess.STDOUT,
+                        timeout=5
+                    )
+                    
+                results[target_name] = self.parse_ping_output(output)
+                
+            except Exception as e:
+                logger.error(f"Quick ping to {target_name} failed: {e}")
+                results[target_name] = {'error': str(e)}
+                
+        return results
+    
+    def run_dns_resolution_tests(self) -> Dict[str, Any]:
+        """Run quick DNS resolution tests"""
+        logger.info("Testing DNS resolution...")
+        
+        targets = ['google.com', 'cloudflare.com']
+        results = {}
+        
+        for target in targets:
+            try:
+                import socket
+                start_time = time.time()
+                socket.getaddrinfo(target, 80)
+                resolution_time = (time.time() - start_time) * 1000
+                results[target] = {
+                    'success': True,
+                    'resolution_time_ms': resolution_time
+                }
+                logger.info(f"DNS resolution to {target}: {resolution_time:.2f}ms")
+                
+            except Exception as e:
+                logger.error(f"DNS resolution to {target} failed: {e}")
+                results[target] = {
+                    'success': False,
+                    'error': str(e)
+                }
+                
+        return results
+    
+    def run_gateway_check(self) -> Dict[str, Any]:
+        """Check if gateway is reachable"""
+        logger.info("Checking gateway reachability...")
+        
+        gateway = self.network_fingerprint.get('gateway', None)
+        if not gateway:
+            return {'error': 'No gateway configured'}
+            
+        try:
+            from ping3 import ping
+            response_time = ping(gateway, timeout=2)
+            if response_time:
+                return {
+                    'reachable': True,
+                    'response_time_ms': response_time * 1000
+                }
+            else:
+                return {
+                    'reachable': False,
+                    'response_time_ms': None
+                }
+                
+        except Exception as e:
+            logger.error(f"Gateway check failed: {e}")
+            return {'error': str(e)}
+    
+    def adjust_test_depth(self, initial_results: Dict[str, Any]):
+        """Adjust test depth based on initial results"""
+        logger.info("Adjusting test depth based on initial results...")
+        
+        # Analyze initial results
+        has_critical_failure = False
+        has_excellent_quality = True
+        
+        # Check for critical failures
+        if 'quick_ping' in initial_results:
+            for target, result in initial_results['quick_ping'].items():
+                if 'error' in result or result.get('packet_loss', 0) > 50:
+                    has_critical_failure = True
+                    break
+                    
+        if 'dns_resolution' in initial_results:
+            for target, result in initial_results['dns_resolution'].items():
+                if not result.get('success', False):
+                    has_critical_failure = True
+                    break
+                    
+        if 'gateway_check' in initial_results:
+            if not initial_results['gateway_check'].get('reachable', False):
+                has_critical_failure = True
+                
+        # Check for excellent network quality
+        if 'quick_ping' in initial_results:
+            for target, result in initial_results['quick_ping'].items():
+                if 'error' in result:
+                    has_excellent_quality = False
+                    break
+                if result.get('packet_loss', 0) > 0 or result.get('avg_latency', 0) > 50:
+                    has_excellent_quality = False
+                    break
+                    
+        if 'dns_resolution' in initial_results:
+            for target, result in initial_results['dns_resolution'].items():
+                if not result.get('success', False) or result.get('resolution_time_ms', 1000) > 50:
+                    has_excellent_quality = False
+                    break
+                    
+        if 'gateway_check' in initial_results:
+            if not initial_results['gateway_check'].get('reachable', False) or \
+               initial_results['gateway_check'].get('response_time_ms', 1000) > 50:
+                has_excellent_quality = False
+                
+        # Determine test depth
+        if has_critical_failure:
+            self.test_config['test_depth'] = 'quick'
+            logger.warning("Critical failure detected, switching to quick test mode")
+        elif has_excellent_quality:
+            self.test_config['test_depth'] = 'quick'
+            logger.info("Excellent network quality detected, switching to quick test mode")
+        else:
+            self.test_config['test_depth'] = 'standard'
+            logger.info("Standard network quality detected, using standard test depth")
+            
+        logger.info(f"Test depth set to: {self.test_config['test_depth']}")
+    
+    def get_priority_tasks(self):
+        """Get diagnostic tasks with priority based on test depth"""
+        tasks = []
+        
+        if self.test_config['test_depth'] in ['quick', 'standard', 'deep']:
+            tasks.extend([
+                ('ping', self.run_ping_tests),
+                ('traceroute', self.run_traceroute)
+            ])
+            
+        if self.test_config['test_depth'] in ['standard', 'deep']:
+            tasks.extend([
+                ('speedtest', self.run_speedtest)
+            ])
+            
+        if self.test_config['test_depth'] == 'deep':
+            tasks.extend([
+                ('mtr', self.run_mtr),
+                ('advanced', self.run_advanced_tests)
+            ])
+            
+        logger.info(f"Selected {len(tasks)} diagnostic tasks for {self.test_config['test_depth']} depth")
+        return tasks
+    
+    def should_stop_early(self, results: Dict[str, Any]) -> bool:
+        """Determine if we should stop testing early due to critical failures"""
+        # Stop if gateway is unreachable
+        if 'gateway_check' in results and not results['gateway_check'].get('reachable', False):
+            logger.warning("Gateway unreachable, stopping all tests")
+            return True
+            
+        # Stop if both DNS servers failed
+        if 'dns_resolution' in results:
+            failed_dns = 0
+            for result in results['dns_resolution'].values():
+                if not result.get('success', False):
+                    failed_dns += 1
+            if failed_dns >= 2:
+                logger.warning("All DNS servers failed, stopping all tests")
+                return True
+                
+        # Stop if ping tests show 100% packet loss
+        if 'quick_ping' in results:
+            complete_loss = 0
+            for target, result in results['quick_ping'].items():
+                if 'error' in result or result.get('packet_loss', 0) == 100:
+                    complete_loss += 1
+            if complete_loss >= 2:
+                logger.warning("Multiple targets showing 100% packet loss, stopping all tests")
+                return True
+                
+        return False
             
     def run_ping_tests(self) -> Dict[str, Any]:
         """Run optimized ping tests with parallel execution"""
@@ -419,6 +764,130 @@ class SunyaCore:
             logger.error(f"Speed test failed: {e}")
             return {'error': str(e)}
             
+    def load_cache(self):
+        """Load test cache from previous runs if fingerprint matches"""
+        cache_file = 'sunya-test-cache.json'
+        
+        try:
+            if os.path.exists(cache_file):
+                with open(cache_file, 'r') as f:
+                    cache = json.load(f)
+                    
+                # Check if fingerprint matches (consider time-based expiration)
+                if 'fingerprint' in cache and 'timestamp' in cache:
+                    cache_age = time.time() - datetime.fromisoformat(cache['timestamp']).timestamp()
+                    if cache_age < 3600:  # Cache valid for 1 hour
+                        self.test_cache = cache
+                        logger.info("Test cache loaded (valid)")
+                    else:
+                        logger.info("Test cache expired")
+                else:
+                    logger.info("Invalid cache format")
+                    
+        except Exception as e:
+            logger.error(f"Failed to load test cache: {e}")
+    
+    def save_cache(self):
+        """Save current test results to cache"""
+        cache_file = 'sunya-test-cache.json'
+        
+        try:
+            cache = {
+                'timestamp': datetime.now().isoformat(),
+                'fingerprint': self.network_fingerprint,
+                'results': self.diagnostics_results,
+                'test_config': self.test_config
+            }
+            
+            with open(cache_file, 'w') as f:
+                json.dump(cache, f)
+                
+            logger.info("Test cache saved successfully")
+            
+        except Exception as e:
+            logger.error(f"Failed to save test cache: {e}")
+    
+    def run_advanced_tests(self) -> Dict[str, Any]:
+        """Run advanced network tests for deep diagnosis"""
+        logger.info("Running advanced network tests...")
+        
+        results = {
+            'mtu_test': self.run_mtu_test(),
+            'port_scan': self.run_port_scan()
+        }
+        
+        return results
+    
+    def run_mtu_test(self) -> Dict[str, Any]:
+        """Test maximum transmission unit"""
+        logger.info("Testing MTU size...")
+        
+        results = {
+            'best_mtu': None,
+            'path_mtu': None
+        }
+        
+        try:
+            # Simple MTU test using ping with don't fragment flag
+            for mtu in range(1500, 1400, -10):
+                try:
+                    if self.platform == 'windows':
+                        output = subprocess.check_output(
+                            ['ping', '-n', '1', '-l', str(mtu), '-f', self.network_fingerprint.get('gateway', '192.168.1.1')],
+                            universal_newlines=True,
+                            stderr=subprocess.STDOUT,
+                            timeout=2
+                        )
+                    else:
+                        output = subprocess.check_output(
+                            ['ping', '-c', '1', '-s', str(mtu), '-M', 'do', self.network_fingerprint.get('gateway', '192.168.1.1')],
+                            universal_newlines=True,
+                            stderr=subprocess.STDOUT,
+                            timeout=2
+                        )
+                        
+                    if 'unreachable' not in output.lower() and 'fragmentation' not in output.lower():
+                        results['best_mtu'] = mtu
+                        logger.info(f"Found working MTU: {mtu}")
+                        break
+                        
+                except Exception as e:
+                    logger.debug(f"MTU {mtu} failed: {e}")
+                    
+        except Exception as e:
+            logger.error(f"MTU test failed: {e}")
+            
+        return results
+    
+    def run_port_scan(self) -> Dict[str, Any]:
+        """Scan common ports on network targets"""
+        logger.info("Scanning common ports...")
+        
+        targets = [self.network_fingerprint.get('gateway', '192.168.1.1')]
+        ports = [53, 80, 443]
+        results = {}
+        
+        try:
+            import socket
+            for target in targets:
+                target_results = {}
+                for port in ports:
+                    try:
+                        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+                        sock.settimeout(0.5)
+                        result = sock.connect_ex((target, port))
+                        target_results[port] = 'open' if result == 0 else 'closed'
+                        sock.close()
+                    except Exception as e:
+                        target_results[port] = f'error: {e}'
+                        
+                results[target] = target_results
+                
+        except Exception as e:
+            logger.error(f"Port scan failed: {e}")
+            
+        return results
+    
     def run_mtr(self) -> Dict[str, Any]:
         """Run MTR (My TraceRoute) for comprehensive route analysis"""
         logger.info("Running MTR test...")
@@ -476,6 +945,628 @@ class SunyaCore:
         return {'hops': hops}
         
     def run_analysis(self) -> Dict[str, Any]:
+        """Run intelligent analysis engine with confidence scoring and pattern matching"""
+        logger.info("Running intelligent analysis engine...")
+        
+        analysis = {
+            'issues': [],
+            'diagnosis': '',
+            'recommendations': [],
+            'confidence_score': 0.0,
+            'patterns': []
+        }
+        
+        # Check if we have internet connectivity information
+        network_available = self.is_network_available()
+        
+        if not network_available:
+            analysis['diagnosis'] = "No internet connectivity detected - only local network diagnostics available"
+            analysis['confidence_score'] = 95.0
+            analysis['recommendations'] = [
+                "Check physical network connections",
+                "Verify modem/router is powered and operational",
+                "Restart modem/router if necessary",
+                "Contact ISP if issue persists"
+            ]
+            
+            # Analyze local network issues
+            if 'quick_ping' in self.diagnostics_results:
+                self.analyze_ping_issues(analysis, [])
+                
+            if 'gateway_check' in self.diagnostics_results:
+                gateway_result = self.diagnostics_results['gateway_check']
+                if gateway_result.get('reachable', False) is False:
+                    analysis['issues'].append({
+                        'type': 'gateway_unreachable',
+                        'severity': 'critical',
+                        'target': 'Gateway',
+                        'value': 'Unreachable',
+                        'description': 'Default gateway is not reachable'
+                    })
+            
+            logger.info(f"Analysis completed with {analysis['confidence_score']:.1f}% confidence (offline)")
+            return analysis
+        
+        # Calculate base confidence
+        base_confidence = self.calculate_base_confidence()
+        
+        # Analyze results using pattern matching
+        patterns = self.detect_network_patterns()
+        analysis['patterns'] = patterns
+        
+        # Identify specific issues
+        if 'ping' in self.diagnostics_results:
+            self.analyze_ping_issues(analysis, patterns)
+            
+        if 'traceroute' in self.diagnostics_results:
+            self.analyze_traceroute_issues(analysis, patterns)
+            
+        if 'speedtest' in self.diagnostics_results:
+            self.analyze_speedtest_issues(analysis, patterns)
+            
+        # Calculate final confidence score
+        analysis['confidence_score'] = self.calculate_final_confidence(base_confidence, patterns)
+        
+        # Determine diagnosis and recommendations
+        self.determine_diagnosis(analysis, patterns)
+        
+        logger.info(f"Analysis completed with {analysis['confidence_score']:.1f}% confidence")
+        return analysis
+    
+    def calculate_base_confidence(self) -> float:
+        """Calculate base confidence score from available evidence"""
+        evidence_count = 0
+        successful_tests = 0
+        
+        if 'quick_ping' in self.diagnostics_results:
+            evidence_count += 1
+            successful_tests += 1
+            
+        if 'dns_resolution' in self.diagnostics_results:
+            evidence_count += 1
+            successful_tests += 1
+            
+        if 'gateway_check' in self.diagnostics_results:
+            evidence_count += 1
+            successful_tests += 1
+            
+        if 'ping' in self.diagnostics_results:
+            evidence_count += 1
+            successful_tests += 1
+            
+        if 'traceroute' in self.diagnostics_results:
+            evidence_count += 1
+            successful_tests += 1
+            
+        if 'speedtest' in self.diagnostics_results:
+            evidence_count += 1
+            successful_tests += 1
+            
+        base_confidence = (successful_tests / evidence_count) * 0.7  # 70% weight for evidence count
+        logger.debug(f"Base confidence from evidence count: {base_confidence:.3f}")
+        return base_confidence
+    
+    def detect_first_bad_hop(self):
+        """Identify the first bad hop with high certainty using MTR and traceroute correlation"""
+        logger.info("Detecting first bad hop...")
+        
+        first_bad_hop = None
+        
+        if 'traceroute' in self.diagnostics_results and 'mtr' in self.diagnostics_results:
+            traceroute = self.diagnostics_results['traceroute']
+            mtr = self.diagnostics_results['mtr']
+            
+            # Find the first hop with both traceroute latency spike and MTR loss
+            for i, (trace_hop, mtr_hop) in enumerate(zip(traceroute.get('hops', []), mtr.get('hops', []))):
+                if i == 0:  # Skip localhost
+                    continue
+                    
+                # Check for latency spike in traceroute
+                has_latency_spike = False
+                if i > 1 and len(traceroute.get('hops', [])) > i+1:
+                    prev_hop = traceroute.get('hops', [])[i-1]
+                    curr_hop = trace_hop
+                    next_hop = traceroute.get('hops', [])[i+1]
+                    
+                    prev_latency = prev_hop.get('avg_latency', 0)
+                    curr_latency = curr_hop.get('avg_latency', 0)
+                    next_latency = next_hop.get('avg_latency', 0)
+                    
+                    # Check if current hop has significant latency spike
+                    if curr_latency > prev_latency * 2 and curr_latency > next_latency * 1.5:
+                        has_latency_spike = True
+                
+                # Check for packet loss in MTR
+                has_packet_loss = False
+                packet_loss = mtr_hop.get('loss', 0)
+                if isinstance(packet_loss, (int, float)) and packet_loss > 10:
+                    has_packet_loss = True
+                elif isinstance(packet_loss, str):
+                    try:
+                        loss_value = float(packet_loss.replace('%', ''))
+                        if loss_value > 10:
+                            has_packet_loss = True
+                    except ValueError:
+                        pass
+                
+                # If both conditions met, consider this the first bad hop
+                if has_latency_spike and has_packet_loss:
+                    first_bad_hop = {
+                        'hop': i+1,
+                        'ip_address': trace_hop.get('ip', 'Unknown'),
+                        'hostname': trace_hop.get('hostname', 'Unknown'),
+                        'latency': trace_hop.get('avg_latency', 0),
+                        'packet_loss': packet_loss,
+                        'confidence': 95  # High confidence due to dual verification
+                    }
+                    logger.info(f"First bad hop detected at hop {i+1}")
+                    break
+        
+        return first_bad_hop
+    
+    def detect_network_patterns(self):
+        """Detect known network issue patterns from test results"""
+        logger.info("Detecting network patterns...")
+        
+        patterns = []
+        
+        if self.has_wifi_interference_pattern():
+            patterns.append('wifi_interference')
+            
+        if self.has_mtu_blackhole_pattern():
+            patterns.append('mtu_blackhole')
+            
+        if self.has_isp_congestion_pattern():
+            patterns.append('isp_congestion')
+            
+        if self.has_dns_manipulation_pattern():
+            patterns.append('dns_manipulation')
+            
+        if self.has_routing_asymmetry_pattern():
+            patterns.append('routing_asymmetry')
+            
+        logger.info(f"Detected patterns: {', '.join(patterns) if patterns else 'none'}")
+        return patterns
+    
+    def has_wifi_interference_pattern(self) -> bool:
+        """Check if test results match WiFi interference pattern"""
+        if 'ping' in self.diagnostics_results:
+            ping_results = self.diagnostics_results['ping']
+            if 'gateway' in ping_results and 'packet_loss' in ping_results['gateway']:
+                if ping_results['gateway']['packet_loss'] > 10:
+                    return True
+        return False
+    
+    def has_mtu_blackhole_pattern(self) -> bool:
+        """Check if test results match MTU blackhole pattern"""
+        if 'advanced' in self.diagnostics_results and 'mtu_test' in self.diagnostics_results['advanced']:
+            if self.diagnostics_results['advanced']['mtu_test']['best_mtu'] is not None:
+                best_mtu = self.diagnostics_results['advanced']['mtu_test']['best_mtu']
+                if best_mtu < 1460:
+                    return True
+        return False
+    
+    def has_isp_congestion_pattern(self) -> bool:
+        """Check if test results match ISP congestion pattern"""
+        if 'speedtest' in self.diagnostics_results:
+            if 'download' in self.diagnostics_results['speedtest'] and \
+               self.diagnostics_results['speedtest']['download'] < 10:  # Less than 10 Mbps
+                return True
+        return False
+    
+    def has_dns_manipulation_pattern(self) -> bool:
+        """Check if test results match DNS manipulation pattern"""
+        if 'dns_resolution' in self.diagnostics_results:
+            for domain, result in self.diagnostics_results['dns_resolution'].items():
+                if not result.get('success', False):
+                    return True
+        return False
+    
+    def has_routing_asymmetry_pattern(self) -> bool:
+        """Check if test results match routing asymmetry pattern"""
+        return False  # To be implemented with more advanced routing analysis
+    
+    def analyze_ping_issues(self, analysis, patterns):
+        """Analyze ping test results for issues"""
+        if 'ping' in self.diagnostics_results:
+            ping_results = self.diagnostics_results['ping']
+            
+            for target, metrics in ping_results.items():
+                if 'error' not in metrics:
+                    if metrics['packet_loss'] > 5:
+                        analysis['issues'].append({
+                            'type': 'packet_loss',
+                            'severity': 'high',
+                            'target': target,
+                            'value': f"{metrics['packet_loss']}%",
+                            'description': f"High packet loss detected to {target}"
+                        })
+                        
+                    if metrics['avg_latency'] > 100:
+                        analysis['issues'].append({
+                            'type': 'high_latency',
+                            'severity': 'medium',
+                            'target': target,
+                            'value': f"{metrics['avg_latency']}ms",
+                            'description': f"High latency detected to {target}"
+                        })
+                        
+                    if metrics['jitter'] > 50:
+                        analysis['issues'].append({
+                            'type': 'jitter',
+                            'severity': 'medium',
+                            'target': target,
+                            'value': f"{metrics['jitter']}ms",
+                            'description': f"High jitter detected to {target}"
+                        })
+    
+    def analyze_traceroute_issues(self, analysis, patterns):
+        """Analyze traceroute test results for issues"""
+        if 'traceroute' in self.diagnostics_results:
+            traceroute_results = self.diagnostics_results['traceroute']
+            
+            if isinstance(traceroute_results, dict):
+                for target, trace in traceroute_results.items():
+                    if 'hops' in trace:
+                        for hop in trace['hops']:
+                            if hop.get('loss', 0) > 10:
+                                analysis['issues'].append({
+                                    'type': 'hop_loss',
+                                    'severity': 'high',
+                                    'target': f"Hop {hop['hop']}",
+                                    'value': f"{hop['loss']}%",
+                                    'description': f"High packet loss at hop {hop['hop']}"
+                                })
+                        
+                            if hop.get('avg', 0) > 200:
+                                analysis['issues'].append({
+                                    'type': 'hop_latency',
+                                    'severity': 'medium',
+                                    'target': f"Hop {hop['hop']}",
+                                    'value': f"{hop['avg']}ms",
+                                    'description': f"High latency at hop {hop['hop']}"
+                                })
+    
+    def analyze_speedtest_issues(self, analysis, patterns):
+        """Analyze speed test results for issues"""
+        if 'speedtest' in self.diagnostics_results:
+            speedtest_results = self.diagnostics_results['speedtest']
+            
+            if 'download' in speedtest_results and speedtest_results['download'] < 10:
+                analysis['issues'].append({
+                    'type': 'slow_download',
+                    'severity': 'high',
+                    'target': 'Download',
+                    'value': f"{speedtest_results['download']:.2f} Mbps",
+                    'description': 'Download speed is significantly below expected'
+                })
+                
+            if 'upload' in speedtest_results and speedtest_results['upload'] < 5:
+                analysis['issues'].append({
+                    'type': 'slow_upload',
+                    'severity': 'medium',
+                    'target': 'Upload',
+                    'value': f"{speedtest_results['upload']:.2f} Mbps",
+                    'description': 'Upload speed is below expected'
+                })
+    
+    def calculate_final_confidence(self, base_confidence: float, patterns: list) -> float:
+        """Calculate final confidence score by combining base confidence and pattern matching"""
+        pattern_bonus = 0.0
+        
+        # Bonus for each matching pattern (each pattern adds 5-10% confidence)
+        for pattern in patterns:
+            if pattern == 'wifi_interference':
+                pattern_bonus += 0.10
+            elif pattern == 'mtu_blackhole':
+                pattern_bonus += 0.10
+            elif pattern == 'isp_congestion':
+                pattern_bonus += 0.08
+            elif pattern == 'dns_manipulation':
+                pattern_bonus += 0.05
+            elif pattern == 'routing_asymmetry':
+                pattern_bonus += 0.05
+                
+        final_confidence = min(base_confidence + pattern_bonus, 0.95)
+        return final_confidence * 100
+    
+    def run_offline_diagnostics(self) -> Dict[str, Any]:
+        """Run diagnostic tests when internet connectivity is not available"""
+        logger.info("Running offline diagnostics...")
+        
+        results = {}
+        
+        # Offline tests (no internet required)
+        offline_tests = [
+            ('quick_ping', self.run_quick_ping_tests),
+            ('gateway_check', self.run_gateway_check)
+        ]
+        
+        try:
+            from concurrent.futures import ThreadPoolExecutor
+            with ThreadPoolExecutor(max_workers=2) as executor:
+                future_to_task = {executor.submit(task): name for name, task in offline_tests}
+                
+                for future in as_completed(future_to_task):
+                    task_name = future_to_task[future]
+                    try:
+                        result = future.result(timeout=30)
+                        results[task_name] = result
+                        logger.info(f"{task_name} completed")
+                    except Exception as e:
+                        logger.error(f"{task_name} failed: {e}")
+                        results[task_name] = {'error': str(e)}
+                        
+        except Exception as e:
+            logger.error(f"Offline tests failed: {e}")
+            
+        # Always run analysis on offline results
+        if self.run_analysis:
+            results['analysis'] = self.run_analysis()
+            
+        return results
+    
+    def get_pattern_description(self, pattern: str) -> str:
+        """Get human-readable description for network patterns"""
+        pattern_descriptions = {
+            'wifi_interference': 'WiFi Interference - Likely caused by neighboring networks or devices',
+            'mtu_blackhole': 'MTU Blackhole - Network path cannot handle standard MTU size',
+            'isp_congestion': 'ISP Congestion - Network congestion affecting performance',
+            'dns_manipulation': 'DNS Resolution Issues - DNS servers unresponsive or misconfigured',
+            'routing_asymmetry': 'Routing Asymmetry - Traffic takes different paths in each direction'
+        }
+        
+        return pattern_descriptions.get(pattern, pattern)
+    
+    def generate_alerts(self, analysis):
+        """Generate actionable alerts based on analysis results"""
+        logger.info("Generating alerts...")
+        
+        alerts = []
+        
+        if 'analysis' not in self.diagnostics_results:
+            logger.warning("No analysis results to generate alerts from")
+            return alerts
+        
+        # Analyze issues for alerts
+        if 'issues' in analysis:
+            for issue in analysis['issues']:
+                alert = self.create_alert_from_issue(issue, analysis)
+                if alert:
+                    alerts.append(alert)
+        
+        # Analyze patterns for alerts
+        if 'patterns' in analysis and analysis['patterns']:
+            for pattern in analysis['patterns']:
+                alert = self.create_alert_from_pattern(pattern, analysis)
+                if alert:
+                    alerts.append(alert)
+        
+        # Analyze performance metrics for alerts
+        alerts.extend(self.create_performance_alerts(analysis))
+        
+        logger.info(f"Generated {len(alerts)} alert(s)")
+        return alerts
+    
+    def create_alert_from_issue(self, issue, analysis):
+        """Create an alert from a specific issue"""
+        severity = issue.get('severity', 'medium')
+        
+        alert = {
+            'id': f"{issue['type']}_{int(time.time())}",
+            'type': issue['type'],
+            'severity': severity,
+            'message': issue['description'],
+            'target': issue['target'],
+            'value': issue['value'],
+            'confidence': analysis['confidence_score'],
+            'timestamp': datetime.now().isoformat(),
+            'action_suggestion': self.get_action_suggestion(issue['type'])
+        }
+        
+        return alert
+    
+    def create_alert_from_pattern(self, pattern, analysis):
+        """Create an alert from a network pattern"""
+        patterns = {
+            'wifi_interference': {
+                'message': 'WiFi interference likely affecting performance',
+                'severity': 'medium',
+                'action_suggestion': 'Try changing WiFi channel or moving closer to router'
+            },
+            'mtu_blackhole': {
+                'message': 'MTU blackhole detected in network path',
+                'severity': 'high',
+                'action_suggestion': 'Contact ISP to investigate MTU path issues'
+            },
+            'isp_congestion': {
+                'message': 'ISP congestion affecting network performance',
+                'severity': 'medium',
+                'action_suggestion': 'Consider testing during off-peak hours or upgrading plan'
+            },
+            'dns_manipulation': {
+                'message': 'DNS resolution issues detected',
+                'severity': 'high',
+                'action_suggestion': 'Try changing DNS servers to 8.8.8.8 or 1.1.1.1'
+            },
+            'routing_asymmetry': {
+                'message': 'Routing asymmetry detected',
+                'severity': 'medium',
+                'action_suggestion': 'Contact ISP to investigate routing issues'
+            }
+        }
+        
+        pattern_info = patterns.get(pattern, {})
+        
+        alert = {
+            'id': f"pattern_{pattern}_{int(time.time())}",
+            'type': 'pattern',
+            'pattern_type': pattern,
+            'severity': pattern_info.get('severity', 'medium'),
+            'message': pattern_info.get('message', f"Network pattern detected: {pattern}"),
+            'confidence': analysis['confidence_score'],
+            'timestamp': datetime.now().isoformat(),
+            'action_suggestion': pattern_info.get('action_suggestion', 'Contact support for assistance')
+        }
+        
+        return alert
+    
+    def create_performance_alerts(self, analysis):
+        """Create alerts based on performance metrics"""
+        alerts = []
+        
+        if 'speedtest' in self.diagnostics_results:
+            speedtest = self.diagnostics_results['speedtest']
+            if 'download' in speedtest and speedtest['download'] < 10:
+                alerts.append({
+                    'id': f"slow_download_{int(time.time())}",
+                    'type': 'performance',
+                    'subtype': 'download_speed',
+                    'severity': 'high',
+                    'message': f"Download speed {speedtest['download']:.2f} Mbps is too slow",
+                    'value': f"{speedtest['download']:.2f} Mbps",
+                    'confidence': analysis['confidence_score'],
+                    'timestamp': datetime.now().isoformat(),
+                    'action_suggestion': 'Check for bandwidth-consuming applications or contact ISP'
+                })
+        
+        return alerts
+    
+    def get_action_suggestion(self, issue_type):
+        """Get action suggestion based on issue type"""
+        suggestions = {
+            'packet_loss': 'Check physical connections, restart router, or contact ISP',
+            'high_latency': 'Check for network congestion or WiFi interference',
+            'jitter': 'Check for packet loss or network stability issues',
+            'gateway_unreachable': 'Check physical connections, restart router',
+            'dns_failure': 'Try changing DNS servers to 8.8.8.8 or 1.1.1.1',
+            'hop_loss': 'Contact ISP with traceroute information',
+            'hop_latency': 'Contact ISP with traceroute information',
+            'slow_download': 'Check for bandwidth-consuming applications or contact ISP',
+            'slow_upload': 'Check for bandwidth-consuming applications or contact ISP'
+        }
+        
+        return suggestions.get(issue_type, 'Contact support for assistance')
+    
+    def save_alerts(self, alerts):
+        """Save alerts to JSON file"""
+        try:
+            alerts_file = os.path.join(self.report_dir, 'alerts.json')
+            with open(alerts_file, 'w') as f:
+                json.dump(alerts, f, indent=2)
+            logger.info(f"Alerts saved to {alerts_file}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to save alerts: {e}")
+            return False
+    
+    def generate_isp_ticket_text(self, analysis):
+        """Generate ISP-ticket-ready text based on diagnosis"""
+        if not analysis:
+            return "No diagnosis available"
+            
+        ticket_text = "**ISP Support Ticket Information**\n\n"
+        ticket_text += f"**Issue Reported:** {analysis.get('diagnosis', 'Network performance issue')}\n"
+        ticket_text += f"**Confidence Level:** {analysis.get('confidence_score', 0):.1f}%\n\n"
+        
+        if 'patterns' in analysis and analysis['patterns']:
+            ticket_text += "**Detected Network Patterns:**\n"
+            for pattern in analysis['patterns']:
+                ticket_text += f"- {self.get_pattern_description(pattern)}\n"
+            ticket_text += "\n"
+        
+        if 'issues' in analysis and analysis['issues']:
+            ticket_text += "**Specific Issues:**\n"
+            for issue in analysis['issues']:
+                ticket_text += f"- {issue['description']} ({issue['severity']})\n"
+            ticket_text += "\n"
+        
+        if 'recommendations' in analysis and analysis['recommendations']:
+            ticket_text += "**Action Suggestions:**\n"
+            for rec in analysis['recommendations']:
+                ticket_text += f"- {rec}\n"
+            ticket_text += "\n"
+        
+        ticket_text += "**Evidence Summary:**\n"
+        ticket_text += "- Network diagnostic tests have been conducted\n"
+        ticket_text += "- Detailed report with all test results is available\n"
+        ticket_text += "- Confidence score indicates reliability of diagnosis\n"
+        
+        return ticket_text
+    
+    def determine_diagnosis(self, analysis, patterns):
+        """Determine final diagnosis and recommendations based on patterns and issues"""
+        if patterns:
+            primary_pattern = patterns[0]
+            
+            if primary_pattern == 'wifi_interference':
+                analysis['diagnosis'] = "WiFi interference likely causing performance issues"
+                analysis['recommendations'] = [
+                    "Move closer to WiFi router",
+                    "Change WiFi channel",
+                    "Check for other WiFi networks or devices causing interference",
+                    "Consider upgrading to 5GHz WiFi"
+                ]
+                
+            elif primary_pattern == 'mtu_blackhole':
+                analysis['diagnosis'] = "MTU blackhole detected in network path"
+                analysis['recommendations'] = [
+                    "Try lowering MTU setting on router",
+                    "Enable path MTU discovery (PMTUD)",
+                    "Contact ISP if issue persists"
+                ]
+                
+            elif primary_pattern == 'isp_congestion':
+                analysis['diagnosis'] = "ISP congestion affecting connection"
+                analysis['recommendations'] = [
+                    "Try testing at different times of day",
+                    "Contact ISP about bandwidth issues",
+                    "Consider upgrading internet plan"
+                ]
+                
+            elif primary_pattern == 'dns_manipulation':
+                analysis['diagnosis'] = "DNS resolution failures or manipulation"
+                analysis['recommendations'] = [
+                    "Try using alternative DNS servers (Google DNS: 8.8.8.8/8.8.4.4)",
+                    "Flush DNS cache",
+                    "Check for malware or DNS hijacking",
+                    "Contact ISP if issue persists"
+                ]
+                
+            elif primary_pattern == 'routing_asymmetry':
+                analysis['diagnosis'] = "Routing asymmetry detected"
+                analysis['recommendations'] = [
+                    "Contact ISP to investigate routing issues",
+                    "Try traceroute from multiple locations",
+                    "Consider VPN to bypass problematic routes"
+                ]
+                
+        elif analysis['issues']:
+            # No patterns detected, use generic diagnosis
+            high_issues = [issue for issue in analysis['issues'] if issue['severity'] == 'high']
+            if high_issues:
+                analysis['diagnosis'] = "Multiple high-severity issues detected"
+                analysis['recommendations'] = [
+                    "Investigate high-severity issues first",
+                    "Check physical network connections",
+                    "Restart modem/router",
+                    "Contact ISP if issues persist"
+                ]
+            else:
+                analysis['diagnosis'] = "Network performance issues detected"
+                analysis['recommendations'] = [
+                    "Monitor connection for further issues",
+                    "Check for background processes consuming bandwidth",
+                    "Update network drivers and firmware"
+                ]
+        else:
+            # No issues detected
+            analysis['diagnosis'] = "Network performance is normal"
+            analysis['recommendations'] = [
+                "Network performance is within normal parameters",
+                "No immediate action required",
+                "Consider testing at different times"
+            ]
         """Run intelligent analysis engine"""
         logger.info("Running intelligent analysis...")
         
@@ -624,6 +1715,60 @@ class SunyaCore:
             
             pdf.set_font('Arial', '', 10)
             pdf.cell(0, 10, f"Report Generated: {self.network_fingerprint['timestamp']}", 0, 1, 'C')
+            
+            # Executive Summary
+            pdf.add_page()
+            pdf.set_font('Arial', 'B', 16)
+            pdf.cell(0, 10, 'Executive Summary', 0, 1, 'L')
+            pdf.set_draw_color(0, 0, 0)
+            pdf.set_line_width(0.5)
+            pdf.line(10, 33, 200, 33)
+            
+            pdf.set_font('Arial', '', 10)
+            pdf.ln(10)
+            
+            # Confidence Score
+            if 'analysis' in self.diagnostics_results:
+                analysis = self.diagnostics_results['analysis']
+                confidence_score = analysis.get('confidence_score', 0)
+                
+                # Determine color based on score
+                if confidence_score >= 80:
+                    color = (0, 128, 0)  # Green
+                elif confidence_score >= 60:
+                    color = (255, 165, 0)  # Orange
+                else:
+                    color = (255, 0, 0)  # Red
+                
+                pdf.set_font('Arial', 'B', 12)
+                pdf.cell(0, 10, f"Diagnosis Confidence Score: {confidence_score:.1f}%", 0, 1, 'L')
+                pdf.ln(5)
+                
+                # Primary Diagnosis
+                if 'diagnosis' in analysis and analysis['diagnosis']:
+                    pdf.set_font('Arial', 'B', 12)
+                    pdf.cell(0, 10, 'Primary Diagnosis:', 0, 1, 'L')
+                    pdf.set_font('Arial', '', 10)
+                    pdf.multi_cell(0, 8, analysis['diagnosis'])
+                    pdf.ln(5)
+                
+                # Detected Patterns
+                if 'patterns' in analysis and analysis['patterns']:
+                    pdf.set_font('Arial', 'B', 12)
+                    pdf.cell(0, 10, 'Detected Network Patterns:', 0, 1, 'L')
+                    pdf.set_font('Arial', '', 10)
+                    for pattern in analysis['patterns']:
+                        pdf.cell(0, 8, f"• {self.get_pattern_description(pattern)}", 0, 1, 'L')
+                    pdf.ln(5)
+                
+                # Recommendations
+                if 'recommendations' in analysis and analysis['recommendations']:
+                    pdf.set_font('Arial', 'B', 12)
+                    pdf.cell(0, 10, 'Recommendations:', 0, 1, 'L')
+                    pdf.set_font('Arial', '', 10)
+                    for rec in analysis['recommendations']:
+                        pdf.cell(0, 8, f"• {rec}", 0, 1, 'L')
+                    pdf.ln(5)
             
             # Network Fingerprint
             pdf.add_page()
