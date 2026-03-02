@@ -27,6 +27,7 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 import ping3
 import speedtest
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Configure logging
 logging.basicConfig(
@@ -207,13 +208,16 @@ class ComprehensiveNetworkDiagnostic:
                     'screenshot': screenshot_path
                 }
             
-            time.sleep(1)
+            # Remove unnecessary delay between pings
     
     def run_traceroute(self, targets):
-        """Run traceroute commands on target IP addresses"""
+        """Run traceroute commands on target IP addresses in parallel"""
         logger.info("Starting traceroute tests...")
         
-        for target in targets:
+        # Run traceroutes in parallel for faster execution
+        from concurrent.futures import ThreadPoolExecutor
+        
+        def run_single_traceroute(target):
             logger.info(f"Running traceroute to {target}...")
             
             try:
@@ -226,24 +230,30 @@ class ComprehensiveNetworkDiagnostic:
                     cmd,
                     capture_output=True,
                     text=True,
-                    timeout=60
+                    timeout=45  # Reduced timeout for faster execution
                 )
                 
-                self.test_results['traceroutes'][target] = {
+                logger.info(f"Traceroute to {target} completed")
+                return target, {
                     'stdout': result.stdout,
                     'stderr': result.stderr,
                     'returncode': result.returncode
                 }
                 
-                logger.info(f"Traceroute to {target} completed")
-                
             except Exception as e:
                 logger.error(f"Traceroute to {target} failed: {e}")
-                self.test_results['traceroutes'][target] = {
-                    'error': str(e)
-                }
+                return target, {'error': str(e)}
+        
+        # Use ThreadPoolExecutor for parallel execution
+        with ThreadPoolExecutor(max_workers=len(targets)) as executor:
+            future_to_target = {
+                executor.submit(run_single_traceroute, target): target 
+                for target in targets
+            }
             
-            time.sleep(2)
+            for future in as_completed(future_to_target):
+                target, result = future.result()
+                self.test_results['traceroutes'][target] = result
     
     def setup_chrome_driver(self):
         """Setup Chrome driver with appropriate options"""
@@ -268,11 +278,12 @@ class ComprehensiveNetworkDiagnostic:
             return False
     
     def capture_browser_screenshot(self, name):
-        """Capture and save a screenshot from the browser"""
+        """Capture and save a screenshot from the browser with minimal delay"""
         try:
             logger.info(f"Capturing browser screenshot: {name}")
             
-            time.sleep(2)
+            # Reduced wait time for faster execution
+            time.sleep(0.5)
             screenshot_path = os.path.join(self.report_folder, f"{name}_{self.timestamp}.png")
             self.driver.save_screenshot(screenshot_path)
             self.screenshots.append(screenshot_path)
@@ -282,25 +293,21 @@ class ComprehensiveNetworkDiagnostic:
         except Exception as e:
             logger.error(f"Failed to capture screenshot: {e}")
             return None
-    
+            
     def run_speed_tests(self):
-        """Run speed tests on multiple websites using Chrome"""
+        """Run speed tests on multiple websites using Chrome with optimized performance"""
         logger.info("Starting speed tests...")
         
+        # Reduce number of speed test sites for faster execution
         speed_test_websites = [
-            {
-                'name': 'Speedtest.net',
-                'url': 'https://www.speedtest.net/',
-                'start_button': '//*[@id="container"]/div/div[3]/div/div/div/div[2]/div[3]/div[1]/a/span[4]'
-            },
             {
                 'name': 'Fast.com',
                 'url': 'https://fast.com/',
-                'start_button': None  # Auto-starts
+                'start_button': None  # Auto-starts, fastest test
             },
             {
-                'name': 'Ookla Speedtest',
-                'url': 'https://www.ookla.com/speedtest',
+                'name': 'Speedtest.net',
+                'url': 'https://www.speedtest.net/',
                 'start_button': '//*[@id="container"]/div/div[3]/div/div/div/div[2]/div[3]/div[1]/a/span[4]'
             }
         ]
@@ -310,12 +317,12 @@ class ComprehensiveNetworkDiagnostic:
             
             try:
                 self.driver.get(site['url'])
-                time.sleep(5)
+                time.sleep(3)  # Reduced wait time for page load
                 
                 # Click start button if needed
                 if site['start_button']:
                     try:
-                        start_button = WebDriverWait(self.driver, 10).until(
+                        start_button = WebDriverWait(self.driver, 8).until(  # Reduced wait time
                             EC.element_to_be_clickable((By.XPATH, site['start_button']))
                         )
                         start_button.click()
@@ -323,9 +330,12 @@ class ComprehensiveNetworkDiagnostic:
                     except Exception as e:
                         logger.warning(f"Could not click start button: {e}")
                 
-                # Wait for test to complete
+                # Wait for test to complete - reduced for faster execution
                 logger.info(f"Waiting for {site['name']} to complete...")
-                time.sleep(60)
+                if site['name'] == 'Fast.com':
+                    time.sleep(30)  # Fast.com is quicker
+                else:
+                    time.sleep(45)  # Reduced from 60 seconds
                 
                 # Capture screenshot
                 screenshot = self.capture_browser_screenshot(f"speedtest_{site['name']}")
@@ -745,6 +755,19 @@ class ComprehensiveNetworkDiagnostic:
 
 def main():
     """Main function to run the comprehensive network diagnostic tool"""
+    
+    # Check for help option
+    if len(sys.argv) > 1 and sys.argv[1] == '--help':
+        print("Comprehensive Network Diagnostic Tool")
+        print("====================================")
+        print("Automates all network testing processes with detailed PDF report generation")
+        print("\nUsage:")
+        print("  python comprehensive-network-diagnostic.py")
+        print("  python comprehensive-network-diagnostic.py --help")
+        print("\nOptions:")
+        print("  --help    Show this help message and exit")
+        return 0
+    
     logger.info("============================================")
     logger.info("  Comprehensive Network Diagnostic Tool")
     logger.info("============================================")

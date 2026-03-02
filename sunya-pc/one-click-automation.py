@@ -92,12 +92,12 @@ class OneClickAutomationTool:
             return False
     
     def capture_screenshot(self, name):
-        """Capture and save a screenshot from the browser"""
+        """Capture and save a screenshot from the browser with minimal delay"""
         try:
             logger.info(f"Capturing screenshot: {name}")
             
-            # Wait for page to stabilize
-            time.sleep(2)
+            # Reduced wait time for faster execution
+            time.sleep(0.5)
             
             # Capture screenshot
             screenshot_path = os.path.join(self.report_folder, f"{name}_{self.timestamp}.png")

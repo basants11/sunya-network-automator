@@ -160,13 +160,13 @@ class SunyaCore:
             return None
             
     def run_parallel_diagnostics(self) -> Dict[str, Any]:
-        """Run all diagnostic modules in parallel"""
+        """Run all diagnostic modules in parallel with optimized performance"""
         logger.info("Starting parallel diagnostics...")
         
         if not self.report_dir:
             logger.error("No report directory created")
             return {}
-            
+        
         # Define diagnostic tasks
         diagnostic_tasks = [
             ('ping', self.run_ping_tests),
@@ -178,8 +178,14 @@ class SunyaCore:
         results = {}
         
         try:
-            # Use ThreadPoolExecutor for parallel execution
-            with ThreadPoolExecutor(max_workers=4) as executor:
+            # Use ProcessPoolExecutor for better parallelism (CPU bound tasks)
+            from concurrent.futures import ProcessPoolExecutor
+            
+            # Determine optimal number of workers (CPU count * 1.5 for I/O bound tasks)
+            import multiprocessing
+            max_workers = min(multiprocessing.cpu_count() * 2, 8)  # Cap at 8 workers
+            
+            with ProcessPoolExecutor(max_workers=max_workers) as executor:
                 # Submit all tasks
                 future_to_task = {executor.submit(task): name for name, task in diagnostic_tasks}
                 
@@ -187,7 +193,7 @@ class SunyaCore:
                 for future in as_completed(future_to_task):
                     task_name = future_to_task[future]
                     try:
-                        result = future.result(timeout=300)  # 5 minute timeout per task
+                        result = future.result(timeout=120)  # Reduce timeout to 2 minutes
                         results[task_name] = result
                         logger.info(f"{task_name} completed successfully")
                     except Exception as e:
@@ -203,7 +209,7 @@ class SunyaCore:
             return {}
             
     def run_ping_tests(self) -> Dict[str, Any]:
-        """Run advanced ping tests with 1400-byte payload to key targets"""
+        """Run optimized ping tests with parallel execution"""
         from ping3 import ping, verbose_ping
         
         targets = {
@@ -216,38 +222,52 @@ class SunyaCore:
         
         results = {}
         
-        for target_name, target_ip in targets.items():
+        # Run ping tests in parallel for faster execution
+        def run_single_ping(target_name, target_ip):
             if not target_ip or target_ip == '':
-                continue
+                return target_name, {'error': 'Invalid IP address'}
                 
             logger.info(f"Pinging {target_name} ({target_ip})")
             
             try:
-                # Run ping test with 1400-byte payload
                 import subprocess
                 
                 if self.platform == 'windows':
                     output = subprocess.check_output(
-                        ['ping', '-n', '20', '-l', '1400', target_ip],
+                        ['ping', '-n', '10', '-l', '1400', target_ip],  # Reduce to 10 pings for speed
                         universal_newlines=True,
-                        stderr=subprocess.STDOUT
+                        stderr=subprocess.STDOUT,
+                        timeout=30
                     )
                 else:
                     output = subprocess.check_output(
-                        ['ping', '-c', '20', '-s', '1400', target_ip],
+                        ['ping', '-c', '10', '-s', '1400', target_ip],  # Reduce to 10 pings for speed
                         universal_newlines=True,
-                        stderr=subprocess.STDOUT
+                        stderr=subprocess.STDOUT,
+                        timeout=30
                     )
                     
                 # Save raw output
                 with open(f"{self.report_dir}/ping/{target_name}.txt", 'w') as f:
                     f.write(output)
                     
-                results[target_name] = self.parse_ping_output(output)
+                return target_name, self.parse_ping_output(output)
                 
             except Exception as e:
                 logger.error(f"Ping to {target_name} failed: {e}")
-                results[target_name] = {'error': str(e)}
+                return target_name, {'error': str(e)}
+                
+        # Use ThreadPoolExecutor for parallel ping execution
+        from concurrent.futures import ThreadPoolExecutor
+        with ThreadPoolExecutor(max_workers=len(targets)) as executor:
+            future_to_target = {
+                executor.submit(run_single_ping, name, ip): name 
+                for name, ip in targets.items()
+            }
+            
+            for future in as_completed(future_to_target):
+                target_name, result = future.result()
+                results[target_name] = result
                 
         return results
         
