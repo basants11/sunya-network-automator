@@ -50,7 +50,7 @@ def main():
             sys.executable, '-m', 'pip', 'install',
             'requests', 'psutil', 'speedtest-cli', 'ping3', 'pandas',
             'matplotlib', 'seaborn', 'fpdf', 'pytest', 'scipy', 'numpy',
-            'pyautogui'
+            'pyautogui', 'selenium', 'webdriver-manager'
         ], check=True)
         
         if current_os == 'windows':

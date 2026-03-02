@@ -10,3 +10,5 @@ pytest
 scipy
 numpy
 pyautogui
+selenium
+webdriver-manager
