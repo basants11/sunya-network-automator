@@ -1448,9 +1448,123 @@ class SunyaCore:
         
         return suggestions.get(issue_type, 'Contact support for assistance')
     
+    def calculate_file_hash(self, file_path: str) -> str:
+        """Calculate SHA-256 hash of a file for integrity verification"""
+        try:
+            import hashlib
+            
+            sha256_hash = hashlib.sha256()
+            
+            with open(file_path, 'rb') as f:
+                # Read file in chunks to handle large files efficiently
+                for byte_block in iter(lambda: f.read(4096), b""):
+                    sha256_hash.update(byte_block)
+                    
+            return sha256_hash.hexdigest()
+        except Exception as e:
+            logger.error(f"Failed to calculate hash for {file_path}: {e}")
+            return None
+    
+    def generate_evidence_summary(self) -> Dict[str, str]:
+        """Generate evidence integrity summary with file hashes"""
+        logger.info("Generating evidence integrity summary...")
+        
+        evidence_summary = {
+            'generated_at': datetime.now().isoformat(),
+            'files': []
+        }
+        
+        if not self.report_dir:
+            logger.warning("Report directory not initialized")
+            return evidence_summary
+            
+        # Check for common report files
+        report_files = [
+            'results.json',
+            'network_info.txt',
+            'alerts.json',
+            'analysis-summary.json'
+        ]
+        
+        for filename in report_files:
+            file_path = os.path.join(self.report_dir, filename)
+            if os.path.exists(file_path):
+                file_hash = self.calculate_file_hash(file_path)
+                if file_hash:
+                    evidence_summary['files'].append({
+                        'filename': filename,
+                        'hash': file_hash,
+                        'hash_algorithm': 'SHA-256',
+                        'size': os.path.getsize(file_path),
+                        'modified_at': datetime.fromtimestamp(os.path.getmtime(file_path)).isoformat()
+                    })
+        
+        return evidence_summary
+    
+    def save_evidence_summary(self):
+        """Save evidence integrity summary to file"""
+        if not self.report_dir:
+            logger.warning("Cannot save evidence summary: Report directory not initialized")
+            return False
+            
+        try:
+            evidence_summary = self.generate_evidence_summary()
+            summary_file = os.path.join(self.report_dir, 'evidence-integrity.json')
+            
+            with open(summary_file, 'w') as f:
+                json.dump(evidence_summary, f, indent=2, default=str)
+                
+            logger.info(f"Evidence integrity summary saved to {summary_file}")
+            return True
+        except Exception as e:
+            logger.error(f"Failed to save evidence summary: {e}")
+            return False
+    
+    def verify_evidence_integrity(self, summary_file: str = None) -> Dict[str, bool]:
+        """Verify the integrity of report files against hash summary"""
+        logger.info("Verifying evidence integrity...")
+        
+        if not summary_file:
+            summary_file = os.path.join(self.report_dir, 'evidence-integrity.json')
+            
+        if not os.path.exists(summary_file):
+            logger.warning(f"Evidence summary file not found: {summary_file}")
+            return {}
+            
+        try:
+            with open(summary_file, 'r') as f:
+                evidence_summary = json.load(f)
+                
+            verification_results = {}
+            
+            for file_info in evidence_summary.get('files', []):
+                filename = file_info.get('filename')
+                expected_hash = file_info.get('hash')
+                
+                file_path = os.path.join(self.report_dir, filename)
+                if os.path.exists(file_path):
+                    actual_hash = self.calculate_file_hash(file_path)
+                    verification_results[filename] = (actual_hash == expected_hash)
+                    
+                    if not verification_results[filename]:
+                        logger.warning(f"Hash mismatch for {filename}: expected {expected_hash[:16]}..., got {actual_hash[:16]}...")
+                else:
+                    verification_results[filename] = False
+                    logger.warning(f"File not found: {filename}")
+                    
+            return verification_results
+            
+        except Exception as e:
+            logger.error(f"Evidence integrity verification failed: {e}")
+            return {}
+    
     def save_alerts(self, alerts):
         """Save alerts to JSON file"""
         try:
+            if not self.report_dir:
+                logger.warning("Cannot save alerts: Report directory not initialized")
+                return False
+                
             alerts_file = os.path.join(self.report_dir, 'alerts.json')
             with open(alerts_file, 'w') as f:
                 json.dump(alerts, f, indent=2)
@@ -1911,7 +2025,18 @@ class SunyaCore:
             with open(f"{report_dir}/results.json", 'w') as f:
                 json.dump(results, f, indent=2, default=str)
                 
-            # Step 6: Generate PDF report
+            # Step 6: Run analysis
+            analysis = self.run_analysis()
+            
+            # Step 7: Generate and save alerts
+            alerts = self.generate_alerts(analysis)
+            if alerts:
+                self.save_alerts(alerts)
+                
+            # Step 8: Generate evidence integrity summary
+            self.save_evidence_summary()
+            
+            # Step 9: Generate PDF report
             pdf_path = self.generate_pdf_report()
             if not pdf_path:
                 logger.error("PDF report generation failed")
