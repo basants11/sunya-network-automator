@@ -74,9 +74,9 @@ class SunyatShootTool:
         try:
             results = {}
             
-            # Run ping test
-            logger.info("Running ping test...")
-            ping_result = self.core.ping_test('8.8.8.8', count=10, payload_size=1400)
+            # Run quick ping tests
+            logger.info("Running quick ping tests...")
+            ping_result = self.core.run_quick_ping_tests()
             results['ping'] = ping_result
             
             # Run speed test
@@ -86,23 +86,23 @@ class SunyatShootTool:
             
             # Run traceroute
             logger.info("Running traceroute...")
-            traceroute_result = self.core.traceroute('8.8.8.8', max_hops=20)
+            traceroute_result = self.core.run_traceroute()
             results['traceroute'] = traceroute_result
             
             # Run MTR test
             logger.info("Running MTR test...")
-            mtr_result = self.core.mtr_test('8.8.8.8', count=5)
+            mtr_result = self.core.run_mtr()
             results['mtr'] = mtr_result
             
-            # Get system information
-            logger.info("Collecting system information...")
-            system_info = self.core.get_system_info()
-            results['system_info'] = system_info
+            # Run DNS resolution tests
+            logger.info("Running DNS resolution tests...")
+            dns_result = self.core.run_dns_resolution_tests()
+            results['dns'] = dns_result
             
-            # Get network interfaces
-            logger.info("Collecting network interface information...")
-            network_info = self.core.get_network_interfaces()
-            results['network_info'] = network_info
+            # Run gateway check
+            logger.info("Checking gateway connectivity...")
+            gateway_result = self.core.run_gateway_check()
+            results['gateway'] = gateway_result
             
             self.test_results = results
             logger.info("Quick diagnostics completed successfully")
@@ -210,29 +210,32 @@ class SunyatShootTool:
             if not self.create_report_folder():
                 return False
             
-            # Run quick diagnostics
-            if not self.run_quick_diagnostics():
-                logger.error("Quick diagnostics failed")
-                return False
+            # Run complete diagnostic cycle using SunyaCore
+            logger.info("Running complete diagnostic cycle...")
+            report_path = self.core.run_full_diagnostic_cycle()
             
-            # Generate comprehensive report
-            report_path = self.generate_report()
-            if not report_path:
-                logger.error("Report generation failed")
-                return False
+            if report_path:
+                logger.info(f"Diagnostic report generated: {report_path}")
+            else:
+                logger.warning("Failed to generate PDF report, but diagnostic data collected")
             
             logger.info("Full analysis completed successfully")
-            logger.info(f"Report location: {self.report_folder}")
             
             # Try to open the report folder
             try:
-                if self.report_folder:
+                open_path = None
+                if report_path:
+                    open_path = os.path.dirname(report_path)
+                elif self.report_folder:
+                    open_path = self.report_folder
+                
+                if open_path:
                     if self.platform == 'windows':
-                        os.startfile(self.report_folder)
+                        os.startfile(open_path)
                     elif self.platform == 'linux':
-                        subprocess.run(['xdg-open', self.report_folder])
+                        subprocess.run(['xdg-open', open_path])
                     elif self.platform == 'darwin':
-                        subprocess.run(['open', self.report_folder])
+                        subprocess.run(['open', open_path])
             except Exception as e:
                 logger.warning(f"Failed to open report folder: {e}")
             
