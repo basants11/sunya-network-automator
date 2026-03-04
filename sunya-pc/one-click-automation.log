@@ -382,3 +382,67 @@ Symbols not available. Dumping unresolved backtrace:
 2026-03-04 12:36:17,667 - INFO - Diagnostic process completed successfully!
 2026-03-04 12:36:17,667 - INFO - Report saved to: C:\Users\basant\Desktop\OneClick_Diagnostic_Report_2026-03-04_12-33-21
 2026-03-04 12:36:17,667 - INFO - PDF Report: C:\Users\basant\Desktop\OneClick_Diagnostic_Report_2026-03-04_12-33-21\OneClick_Diagnostic_Report_2026-03-04_12-33-21.pdf
+2026-03-04 18:04:09,430 - INFO - ==================================================
+2026-03-04 18:04:09,432 - INFO - SUNYA Networking - One-Click Automation Tool
+2026-03-04 18:04:09,434 - INFO - ==================================================
+2026-03-04 18:04:09,624 - INFO - Starting one-click diagnostic process...
+2026-03-04 18:04:09,625 - INFO - Creating report folder on desktop...
+2026-03-04 18:04:09,627 - INFO - Report folder created: C:\Users\basant\Desktop\OneClick_Diagnostic_Report_2026-03-04_18-04-09
+2026-03-04 18:04:09,628 - INFO - Setting up Chrome driver...
+2026-03-04 18:04:09,645 - INFO - ====== WebDriver manager ======
+2026-03-04 18:04:14,170 - INFO - Get LATEST chromedriver version for google-chrome
+2026-03-04 18:04:15,814 - INFO - Get LATEST chromedriver version for google-chrome
+2026-03-04 18:04:17,149 - INFO - Driver [C:\Users\basant\.wdm\drivers\chromedriver\win64\145.0.7632.117\chromedriver-win32/chromedriver.exe] found in cache
+2026-03-04 18:04:23,388 - INFO - Chrome driver setup completed
+2026-03-04 18:04:23,391 - INFO - Running all tests from Chrome browser...
+2026-03-04 18:04:23,394 - INFO - Running speed test in Chrome browser...
+2026-03-04 18:04:24,462 - INFO - Waiting for speed test to complete...
+2026-03-04 18:04:56,384 - INFO - Show more details clicked
+2026-03-04 18:05:26,483 - INFO - Speed test results: 45 Mbps down, 42 Mbps up
+2026-03-04 18:05:26,484 - INFO - Capturing screenshot: speedtest_browser
+2026-03-04 18:05:27,202 - INFO - Screenshot saved: C:\Users\basant\Desktop\OneClick_Diagnostic_Report_2026-03-04_18-04-09\speedtest_browser_2026-03-04_18-04-09.png
+2026-03-04 18:05:27,202 - INFO - Running ping test to 8.8.8.8
+2026-03-04 18:05:36,202 - INFO - Capturing screenshot: ping_test
+2026-03-04 18:05:37,357 - INFO - Screenshot saved: C:\Users\basant\Desktop\OneClick_Diagnostic_Report_2026-03-04_18-04-09\ping_test_2026-03-04_18-04-09.png
+2026-03-04 18:05:56,746 - INFO - Running traceroute to 8.8.8.8
+2026-03-04 18:06:40,694 - ERROR - Traceroute failed: Message: unknown error: net::ERR_CONNECTION_TIMED_OUT
+  (Session info: chrome=145.0.7632.117)
+Stacktrace:
+Symbols not available. Dumping unresolved backtrace:
+	0x1237dd3
+	0x1237e14
+	0x1041db0
+	0x103f2be
+	0x10323d4
+	0x1033e2c
+	0x1032864
+	0x10321a5
+	0x1031ea5
+	0x102ffb8
+	0x10306ca
+	0x104583e
+	0x10cc174
+	0x10aea3c
+	0x10cb621
+	0x10ae7d6
+	0x1080049
+	0x1080e04
+	0x1496924
+	0x1491bf7
+	0x14af5a0
+	0x1250f58
+	0x125891d
+	0x1240648
+	0x1240812
+	0x122a21a
+	0x777cfcc9
+	0x779182ae
+	0x7791827e
+
+2026-03-04 18:06:40,695 - INFO - Running speed test using speedtest-cli...
+2026-03-04 18:07:04,087 - INFO - Speed test completed: 55.58 Mbps down, 55.61 Mbps up
+2026-03-04 18:07:04,088 - INFO - Compiling PDF report...
+2026-03-04 18:07:04,146 - INFO - PDF report created: C:\Users\basant\Desktop\OneClick_Diagnostic_Report_2026-03-04_18-04-09\OneClick_Diagnostic_Report_2026-03-04_18-04-09.pdf
+2026-03-04 18:07:06,871 - INFO - Diagnostic process completed successfully!
+2026-03-04 18:07:06,871 - INFO - Report saved to: C:\Users\basant\Desktop\OneClick_Diagnostic_Report_2026-03-04_18-04-09
+2026-03-04 18:07:06,874 - INFO - PDF Report: C:\Users\basant\Desktop\OneClick_Diagnostic_Report_2026-03-04_18-04-09\OneClick_Diagnostic_Report_2026-03-04_18-04-09.pdf
