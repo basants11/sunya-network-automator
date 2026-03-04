@@ -1,0 +1,150 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Demo script for Comprehensive Network Diagnostic Tool
+Tests the tool by running a limited set of diagnostics
+"""
+
+import os
+import sys
+import time
+import subprocess
+from pathlib import Path
+
+# Add current directory to Python path
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+
+def main():
+    """Main demo function"""
+    print("=" * 60)
+    print("  SUNYA NETWORKING - COMPREHENSIVE DIAGNOSTIC TOOL DEMO")
+    print("=" * 60)
+    print()
+    
+    # Check if script exists
+    script_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'comprehensive-network-diagnostic.py')
+    if not os.path.exists(script_path):
+        print("ERROR: Comprehensive network diagnostic script not found!")
+        print(f"Looking for: {script_path}")
+        return 1
+    
+    print("Script found at:", script_path)
+    print()
+    
+    # Check Python version
+    print("Checking Python version...")
+    python_version = sys.version_info
+    print(f"Python {python_version.major}.{python_version.minor}.{python_version.micro}")
+    
+    if python_version.major < 3 or (python_version.major == 3 and python_version.minor < 6):
+        print("WARNING: Python 3.6 or higher is recommended")
+    print()
+    
+    # Check dependencies
+    print("Checking required dependencies...")
+    required_modules = [
+        'psutil', 'ping3', 'speedtest', 'pyautogui', 
+        'selenium', 'webdriver_manager', 'fpdf', 'wmi'
+    ]
+    
+    missing_modules = []
+    for module in required_modules:
+        try:
+            __import__(module)
+            print(f"OK {module}")
+        except ImportError:
+            print(f"NO {module}")
+            missing_modules.append(module)
+        except Exception as e:
+            print(f"ER {module} (error: {e})")
+            missing_modules.append(module)
+    
+    if missing_modules:
+        print()
+        print("ERROR: Missing required modules. Please install them with:")
+        print(f"pip install {' '.join(missing_modules)}")
+        return 1
+    
+    print()
+    print("All dependencies installed!")
+    print()
+    
+    # Test basic functionality
+    print("Testing basic functionality...")
+    
+    # Test initialization
+    print("\n1. Testing initialization...")
+    try:
+        import importlib.util
+        spec = importlib.util.spec_from_file_location("comprehensive-network-diagnostic", script_path)
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        tool = module.ComprehensiveNetworkDiagnostic()
+        print(f"   ✓ Success - Tool initialized")
+        print(f"   Platform: {tool.platform}")
+        print(f"   Timestamp: {tool.timestamp}")
+    except Exception as e:
+        print(f"   ✗ Failed - {e}")
+        return 1
+    
+    # Test report folder creation
+    print("\n2. Testing report folder creation...")
+    try:
+        folder = tool.create_report_folder()
+        print(f"   ✓ Success - Folder created at:")
+        print(f"     {folder}")
+    except Exception as e:
+        print(f"   ✗ Failed - {e}")
+        return 1
+    
+    # Test PC details collection
+    print("\n3. Testing PC details collection...")
+    try:
+        tool.get_pc_details()
+        pc_info = tool.test_results['pc_details']
+        print(f"   ✓ Success")
+        print(f"   System: {pc_info['system']} {pc_info['release']}")
+        print(f"   Hostname: {pc_info['hostname']}")
+        print(f"   IP Address: {pc_info['ip_address']}")
+        print(f"   Interfaces: {len(pc_info['interfaces'])}")
+        
+        # Check if any interfaces are gigabit capable
+        gigabit_interfaces = [iface['name'] for iface in pc_info['interfaces'] if iface.get('is_gigabit')]
+        if gigabit_interfaces:
+            print(f"   Gigabit Interfaces: {', '.join(gigabit_interfaces)}")
+        else:
+            print(f"   No gigabit-capable interfaces detected")
+    except Exception as e:
+        print(f"   ✗ Failed - {e}")
+        return 1
+    
+    # Test ping functionality with localhost
+    print("\n4. Testing ping functionality...")
+    try:
+        tool.ping_targets(['127.0.0.1'])
+        if '127.0.0.1' in tool.test_results['pings']:
+            result = tool.test_results['pings']['127.0.0.1']
+            if 'error' not in result:
+                print(f"   ✓ Success - Ping to localhost")
+                print(f"     Packet Loss: {result['packet_loss']:.1f}%")
+                print(f"     Avg RTT: {result['avg_rtt']:.2f}ms")
+            else:
+                print(f"   ✗ Error - {result['error']}")
+    except Exception as e:
+        print(f"   ✗ Failed - {e}")
+    
+    print()
+    print("=" * 60)
+    print("  DEMO COMPLETED SUCCESSFULLY!")
+    print("=" * 60)
+    print()
+    print("To run the full diagnostic test:")
+    print(f"  Double-click: {os.path.join(os.path.dirname(os.path.abspath(__file__)), 'run-comprehensive-diagnostic.bat')}")
+    print()
+    print("Or from command prompt:")
+    print(f"  python {script_path}")
+    
+    return 0
+
+if __name__ == "__main__":
+    sys.exit(main())
