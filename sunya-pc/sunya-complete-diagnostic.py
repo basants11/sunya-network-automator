@@ -94,12 +94,26 @@ try:
 except ImportError:
     PYAUTOGUI_AVAILABLE = False
 
-# Configure logging
+# Configure logging with UTF-8 support
+class UnicodeStreamHandler(logging.StreamHandler):
+    """Stream handler that handles Unicode encoding properly on Windows"""
+    def emit(self, record):
+        try:
+            msg = self.format(record)
+            # Replace Unicode characters with ASCII equivalents
+            msg = msg.replace('\u2713', '[OK]').replace('\u2717', '[FAIL]').replace('\u26a0', '[WARN]')
+            msg = msg.replace('━', '-').replace('═', '=').replace('╔', '+').replace('╗', '+')
+            msg = msg.replace('╚', '+').replace('╝', '+').replace('║', '|').replace('●', '*')
+            self.stream.write(msg + self.terminator)
+            self.flush()
+        except Exception:
+            self.handleError(record)
+
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.StreamHandler(sys.stdout)
+        UnicodeStreamHandler(sys.stdout)
     ]
 )
 logger = logging.getLogger(__name__)
@@ -280,8 +294,8 @@ class SunyaCompleteDiagnostic:
                 os.makedirs(folder_path, exist_ok=True)
                 self.folders[folder] = folder_path
             
-            logger.info(f"✓ Base folder created: {self.base_folder}")
-            logger.info(f"✓ Created {len(subfolders)} subfolders")
+            logger.info(f"[OK] Base folder created: {self.base_folder}")
+            logger.info(f"[OK] Created {len(subfolders)} subfolders")
             
             return True
             
@@ -410,7 +424,11 @@ class SunyaCompleteDiagnostic:
             # Get network configuration
             if nic_config:
                 if nic_config.DefaultIPGateway:
-                    self.adapter_info.default_gateway = nic_config.DefaultIPGateway[0] if isinstance(nic_config.DefaultIPGateway, list) else nic_config.DefaultIPGateway
+                    # Handle both list and tuple returns from WMI
+                    if isinstance(nic_config.DefaultIPGateway, (list, tuple)):
+                        self.adapter_info.default_gateway = nic_config.DefaultIPGateway[0]
+                    else:
+                        self.adapter_info.default_gateway = str(nic_config.DefaultIPGateway)
                 if nic_config.DNSServerSearchOrder:
                     self.adapter_info.dns_servers = list(nic_config.DNSServerSearchOrder)
             
