@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SUNYA NET - Real-Time Network Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            color: #eaeaea;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            background: linear-gradient(45deg, #00d4ff, #7b2cbf);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .header .status {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 15px;
+        }
+        
+        .status-item {
+            background: rgba(0, 212, 255, 0.1);
+            padding: 10px 20px;
+            border-radius: 25px;
+            border: 1px solid rgba(0, 212, 255, 0.3);
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .card {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            padding: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .card h2 {
+            font-size: 1.3em;
+            margin-bottom: 15px;
+            color: #00d4ff;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .metric {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #00d4ff;
+        }
+        
+        .metric-label {
+            font-size: 0.9em;
+            color: #888;
+            margin-top: 5px;
+        }
+        
+        .chart-container {
+            position: relative;
+            height: 250px;
+            margin-top: 15px;
+        }
+        
+        .alert-panel {
+            background: rgba(255, 0, 0, 0.1);
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            border-radius: 10px;
+            padding: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .alert {
+            padding: 10px;
+            margin-bottom: 8px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            animation: slideIn 0.3s ease;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .alert.critical {
+            background: rgba(255, 0, 0, 0.3);
+            border-left: 4px solid #ff0000;
+        }
+        
+        .alert.warning {
+            background: rgba(255, 165, 0, 0.3);
+            border-left: 4px solid #ffa500;
+        }
+        
+        .alert.info {
+            background: rgba(0, 212, 255, 0.3);
+            border-left: 4px solid #00d4ff;
+        }
+        
+        .connection-status {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .connection-status.connected {
+            background: rgba(0, 255, 0, 0.3);
+            border: 1px solid #00ff00;
+            color: #00ff00;
+        }
+        
+        .connection-status.disconnected {
+            background: rgba(255, 0, 0, 0.3);
+            border: 1px solid #ff0000;
+            color: #ff0000;
+        }
+        
+        .indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 5px;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .indicator.good { background: #00ff00; }
+        .indicator.warning { background: #ffa500; }
+        .indicator.critical { background: #ff0000; }
+        
+        .system-metrics {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+        }
+        
+        .system-metric {
+            background: rgba(123, 44, 191, 0.2);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        @media (max-width: 768px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="connectionStatus" class="connection-status disconnected">
+        <span class="indicator critical"></span>Disconnected
+    </div>
+
+    <div class="header">
+        <h1>SUNYA NET Dashboard</h1>
+        <p>Real-Time Network Performance Monitoring</p>
+        <div class="status">
+            <div class="status-item">
+                <span class="indicator" id="latencyIndicator"></span>
+                Latency: <span id="currentLatency">--</span> ms
+            </div>
+            <div class="status-item">
+                <span class="indicator" id="lossIndicator"></span>
+                Packet Loss: <span id="currentLoss">--</span>%
+            </div>
+            <div class="status-item">
+                <span class="indicator" id="speedIndicator"></span>
+                Speed: <span id="currentSpeed">--</span> Mbps
+            </div>
+            <div class="status-item">
+                Update Rate: <span id="updateRate">1-2s</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <h2>📊 Latency Trend</h2>
+            <div class="chart-container">
+                <canvas id="latencyChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>📈 Packet Loss Trend</h2>
+            <div class="chart-container">
+                <canvas id="lossChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>⚡ Speed Test Results</h2>
+            <div class="metrics-grid">
+                <div class="metric">
+                    <div class="metric-value" id="downloadSpeed">--</div>
+                    <div class="metric-label">Download (Mbps)</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="uploadSpeed">--</div>
+                    <div class="metric-label">Upload (Mbps)</div>
+                </div>
+            </div>
+            <div class="chart-container">
+                <canvas id="speedChart"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🚨 Active Alerts</h2>
+            <div id="alertPanel" class="alert-panel">
+                <p style="color: #888; text-align: center;">No active alerts</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🖥️ System Resources</h2>
+            <div class="system-metrics">
+                <div class="system-metric">
+                    <div class="metric-value" id="cpuUsage">--</div>
+                    <div class="metric-label">CPU %</div>
+                </div>
+                <div class="system-metric">
+                    <div class="metric-value" id="memoryUsage">--</div>
+                    <div class="metric-label">Memory %</div>
+                </div>
+                <div class="system-metric">
+                    <div class="metric-value" id="activeThreads">--</div>
+                    <div class="metric-label">Threads</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>🌐 Route Information</h2>
+            <div class="metrics-grid">
+                <div class="metric">
+                    <div class="metric-value" id="hopCount">--</div>
+                    <div class="metric-label">Hop Count</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-value" id="worstLatency">--</div>
+                    <div class="metric-label">Worst Latency (ms)</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Chart configuration
+        const chartOptions = {
+            responsive: true,
+            maintainAspectRatio: false,
+            animation: { duration: 0 },
+            interaction: { mode: 'index', intersect: false },
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                x: {
+                    display: true,
+                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                    ticks: { color: '#888', maxTicksLimit: 8 }
+                },
+                y: {
+                    display: true,
+                    grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                    ticks: { color: '#888' }
+                }
+            }
+        };
+
+        // Initialize charts
+        const latencyChart = new Chart(document.getElementById('latencyChart'), {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Latency (ms)',
+                    data: [],
+                    borderColor: '#00d4ff',
+                    backgroundColor: 'rgba(0, 212, 255, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                ...chartOptions,
+                scales: {
+                    ...chartOptions.scales,
+                    y: { ...chartOptions.scales.y, min: 0 }
+                }
+            }
+        });
+
+        const lossChart = new Chart(document.getElementById('lossChart'), {
+            type: 'line',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Packet Loss (%)',
+                    data: [],
+                    borderColor: '#ff6b6b',
+                    backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                    borderWidth: 2,
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 0
+                }]
+            },
+            options: {
+                ...chartOptions,
+                scales: {
+                    ...chartOptions.scales,
+                    y: { ...chartOptions.scales.y, min: 0, max: 100 }
+                }
+            }
+        });
+
+        const speedChart = new Chart(document.getElementById('speedChart'), {
+            type: 'bar',
+            data: {
+                labels: [],
+                datasets: [{
+                    label: 'Download (Mbps)',
+                    data: [],
+                    backgroundColor: 'rgba(123, 44, 191, 0.8)',
+                    borderWidth: 0
+                }]
+            },
+            options: chartOptions
+        });
+
+        // Data buffers
+        const maxDataPoints = 60;
+        const alerts = [];
+
+        // WebSocket connection
+        let ws = null;
+        let reconnectInterval = null;
+
+        function connectWebSocket() {
+            ws = new WebSocket('ws://localhost:8765');
+
+            ws.onopen = () => {
+                console.log('Connected to SUNYA NET server');
+                updateConnectionStatus(true);
+                if (reconnectInterval) {
+                    clearInterval(reconnectInterval);
+                    reconnectInterval = null;
+                }
+            };
+
+            ws.onmessage = (event) => {
+                try {
+                    const message = JSON.parse(event.data);
+                    if (message.type === 'metrics_batch') {
+                        message.data.forEach(updateMetrics);
+                    }
+                } catch (e) {
+                    console.error('Error parsing message:', e);
+                }
+            };
+
+            ws.onclose = () => {
+                console.log('Disconnected from server');
+                updateConnectionStatus(false);
+                if (!reconnectInterval) {
+                    reconnectInterval = setInterval(connectWebSocket, 3000);
+                }
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+            };
+        }
+
+        function updateConnectionStatus(connected) {
+            const status = document.getElementById('connectionStatus');
+            if (connected) {
+                status.className = 'connection-status connected';
+                status.innerHTML = '<span class="indicator good"></span>Connected';
+            } else {
+                status.className = 'connection-status disconnected';
+                status.innerHTML = '<span class="indicator critical"></span>Disconnected';
+            }
+        }
+
+        function updateMetrics(metrics) {
+            const timestamp = new Date().toLocaleTimeString();
+
+            // Update ping metrics
+            if (metrics.ping) {
+                const latency = metrics.ping.avg_latency || 0;
+                const loss = metrics.ping.avg_packet_loss || 0;
+
+                document.getElementById('currentLatency').textContent = latency.toFixed(1);
+                document.getElementById('currentLoss').textContent = loss.toFixed(1);
+
+                // Update indicators
+                updateIndicator('latencyIndicator', latency > 100 ? 'critical' : latency > 50 ? 'warning' : 'good');
+                updateIndicator('lossIndicator', loss > 5 ? 'critical' : loss > 1 ? 'warning' : 'good');
+
+                // Update charts
+                addChartData(latencyChart, timestamp, latency);
+                addChartData(lossChart, timestamp, loss);
+            }
+
+            // Update speed metrics
+            if (metrics.speed) {
+                const download = metrics.speed.download_speed || 0;
+                const upload = metrics.speed.upload_speed || 0;
+
+                document.getElementById('downloadSpeed').textContent = download.toFixed(1);
+                document.getElementById('uploadSpeed').textContent = upload.toFixed(1);
+                document.getElementById('currentSpeed').textContent = download.toFixed(1);
+
+                updateIndicator('speedIndicator', download < 5 ? 'critical' : download < 20 ? 'warning' : 'good');
+
+                if (speedChart.data.labels.length > 10) {
+                    speedChart.data.labels.shift();
+                    speedChart.data.datasets[0].data.shift();
+                }
+                speedChart.data.labels.push(timestamp);
+                speedChart.data.datasets[0].data.push(download);
+                speedChart.update('none');
+            }
+
+            // Update system metrics
+            if (metrics.system) {
+                document.getElementById('cpuUsage').textContent = (metrics.system.cpu_percent || 0).toFixed(1);
+                document.getElementById('memoryUsage').textContent = (metrics.system.memory_percent || 0).toFixed(1);
+            }
+
+            // Update route metrics
+            if (metrics.route) {
+                document.getElementById('hopCount').textContent = metrics.route.hop_count || '--';
+                document.getElementById('worstLatency').textContent = metrics.route.worst_latency ? metrics.route.worst_latency.toFixed(1) : '--';
+            }
+
+            // Update alerts
+            if (metrics.alerts) {
+                metrics.alerts.forEach(addAlert);
+            }
+        }
+
+        function addChartData(chart, label, value) {
+            if (chart.data.labels.length >= maxDataPoints) {
+                chart.data.labels.shift();
+                chart.data.datasets[0].data.shift();
+            }
+            chart.data.labels.push(label);
+            chart.data.datasets[0].data.push(value);
+            chart.update('none');
+        }
+
+        function updateIndicator(id, status) {
+            const indicator = document.getElementById(id);
+            indicator.className = 'indicator ' + status;
+        }
+
+        function addAlert(alert) {
+            alerts.unshift(alert);
+            if (alerts.length > 20) alerts.pop();
+
+            const panel = document.getElementById('alertPanel');
+            panel.innerHTML = alerts.map(a => `
+                <div class="alert ${a.alert_type}">
+                    <span>${a.alert_type === 'critical' ? '🔴' : a.alert_type === 'warning' ? '🟡' : '🔵'}</span>
+                    <span>${a.message}</span>
+                    <span style="margin-left: auto; color: #888; font-size: 0.8em;">${new Date(a.timestamp).toLocaleTimeString()}</span>
+                </div>
+            `).join('');
+        }
+
+        // Initialize
+        connectWebSocket();
+    </script>
+</body>
+</html>
