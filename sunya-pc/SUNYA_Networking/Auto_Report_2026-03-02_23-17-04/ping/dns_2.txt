@@ -1,0 +1,17 @@
+
+Pinging 103.96.244.51 with 1400 bytes of data:
+Reply from 103.96.244.51: bytes=1400 time=4ms TTL=61
+Reply from 103.96.244.51: bytes=1400 time=15ms TTL=61
+Reply from 103.96.244.51: bytes=1400 time=4ms TTL=61
+Reply from 103.96.244.51: bytes=1400 time=11ms TTL=61
+Reply from 103.96.244.51: bytes=1400 time=15ms TTL=61
+Reply from 103.96.244.51: bytes=1400 time=7ms TTL=61
+Reply from 103.96.244.51: bytes=1400 time=8ms TTL=61
+Reply from 103.96.244.51: bytes=1400 time=7ms TTL=61
+Reply from 103.96.244.51: bytes=1400 time=4ms TTL=61
+Reply from 103.96.244.51: bytes=1400 time=5ms TTL=61
+
+Ping statistics for 103.96.244.51:
+    Packets: Sent = 10, Received = 10, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 4ms, Maximum = 15ms, Average = 8ms

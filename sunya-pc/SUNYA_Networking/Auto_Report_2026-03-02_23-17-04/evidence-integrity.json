@@ -1,0 +1,19 @@
+{
+  "generated_at": "2026-03-02T23:17:50.528237",
+  "files": [
+    {
+      "filename": "results.json",
+      "hash": "68056773701f6707b1847b6fe403485233f25070d271563ed3cef2e267228b22",
+      "hash_algorithm": "SHA-256",
+      "size": 5570,
+      "modified_at": "2026-03-02T23:17:50.502237"
+    },
+    {
+      "filename": "network_info.txt",
+      "hash": "ab3ec8175fb5375428e546f60527f199ab65c0e36cd4766cc8f25bfd8b41c037",
+      "hash_algorithm": "SHA-256",
+      "size": 892,
+      "modified_at": "2026-03-02T23:17:04.734186"
+    }
+  ]
+}

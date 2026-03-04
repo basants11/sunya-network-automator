@@ -1,0 +1,4 @@
+• Check physical connections and cable quality
+• Restart your modem/router if experiencing packet loss
+• Contact your ISP if high latency persists
+• Consider a wired connection if Wi-Fi issues are suspected

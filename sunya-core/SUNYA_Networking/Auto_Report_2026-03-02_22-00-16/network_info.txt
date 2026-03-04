@@ -1,0 +1,15 @@
+timestamp: 2026-03-02T22:00:16.361818
+platform: windows
+interfaces:
+  - {'name': 'vEthernet (WSL)', 'type': 'ethernet', 'ip_addresses': ['192.168.240.1']}
+  - {'name': 'Local Area Connection', 'type': 'loopback', 'ip_addresses': ['169.254.184.183']}
+  - {'name': 'Local Area Connection* 9', 'type': 'loopback', 'ip_addresses': ['169.254.137.66']}
+  - {'name': 'Local Area Connection* 10', 'type': 'loopback', 'ip_addresses': ['169.254.133.1']}
+  - {'name': 'WiFi', 'type': 'unknown', 'ip_addresses': ['192.168.100.45']}
+  - {'name': 'Bluetooth Network Connection', 'type': 'bluetooth', 'ip_addresses': ['169.254.43.57']}
+  - {'name': 'OpenVPN Connect DCO Adapter', 'type': 'unknown', 'ip_addresses': ['169.254.115.27']}
+  - {'name': 'Loopback Pseudo-Interface 1', 'type': 'loopback', 'ip_addresses': ['127.0.0.1']}
+gateway: 192.168.100.1
+dns_servers:
+  - 1%1
+  - 103.96.244.51

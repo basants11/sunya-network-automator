@@ -1,0 +1,23 @@
+# SUNYA NET High-Performance Monitoring System Requirements
+# Install with: pip install -r requirements-performance.txt
+
+# Core dependencies
+psutil>=5.9.0
+
+# WebSocket support for real-time dashboard
+websockets>=11.0
+
+# PDF generation
+fpdf2>=2.7.0
+
+# Data visualization (optional, for chart generation in PDF)
+matplotlib>=3.7.0
+
+# Speed testing (optional, for full speed tests)
+speedtest-cli>=2.1.3
+
+# Async HTTP support (optional)
+aiohttp>=3.8.0
+
+# Selenium for headless browser tests (optional)
+selenium>=4.0.0

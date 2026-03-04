@@ -1,0 +1,27 @@
+# SUNYA Complete Network Diagnostic System Requirements
+# Install with: pip install -r requirements-complete.txt
+
+# Core Windows system integration
+wmi>=1.5.1
+pywin32>=227
+
+# Network utilities
+psutil>=5.9.0
+ping3>=4.0.0
+speedtest-cli>=2.1.3
+
+# Browser automation
+selenium>=4.0.0
+webdriver-manager>=3.8.0
+
+# Report generation
+reportlab>=3.6.0
+fpdf>=2.5.0
+
+# Charts and visualization
+matplotlib>=3.5.0
+numpy>=1.21.0
+
+# Screenshot capture
+pyautogui>=0.9.53
+Pillow>=9.0.0

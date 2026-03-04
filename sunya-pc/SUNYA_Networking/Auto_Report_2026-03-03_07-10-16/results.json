@@ -1,0 +1,299 @@
+{
+  "dns_resolution": {
+    "google.com": {
+      "success": true,
+      "resolution_time_ms": 2.6280879974365234
+    },
+    "cloudflare.com": {
+      "success": true,
+      "resolution_time_ms": 9.723663330078125
+    }
+  },
+  "gateway_check": {
+    "reachable": true,
+    "response_time_ms": 5.465984344482422
+  },
+  "quick_ping": {
+    "gateway": {
+      "packet_loss": 0,
+      "avg_latency": 0,
+      "min_latency": 0,
+      "max_latency": 0,
+      "jitter": 0
+    },
+    "google_dns": {
+      "packet_loss": 0,
+      "avg_latency": 0,
+      "min_latency": 0,
+      "max_latency": 0,
+      "jitter": 0
+    }
+  },
+  "ping": {
+    "dns_1": {
+      "error": "Command '['ping', '-n', '10', '-l', '1400', '1%1']' returned non-zero exit status 1."
+    },
+    "dns_2": {
+      "packet_loss": 0,
+      "avg_latency": 0,
+      "min_latency": 0,
+      "max_latency": 0,
+      "jitter": 0
+    },
+    "gateway": {
+      "packet_loss": 0,
+      "avg_latency": 0,
+      "min_latency": 0,
+      "max_latency": 0,
+      "jitter": 0
+    },
+    "cloudflare_dns": {
+      "packet_loss": 0,
+      "avg_latency": 0,
+      "min_latency": 0,
+      "max_latency": 0,
+      "jitter": 0
+    },
+    "google_dns": {
+      "packet_loss": 0,
+      "avg_latency": 0,
+      "min_latency": 0,
+      "max_latency": 0,
+      "jitter": 0
+    }
+  },
+  "traceroute": {
+    "8.8.8.8": {
+      "hops": [
+        {
+          "hop": "1",
+          "details": [
+            "1",
+            "ms",
+            "5",
+            "ms",
+            "7",
+            "ms",
+            "192.168.100.1"
+          ]
+        },
+        {
+          "hop": "2",
+          "details": [
+            "4",
+            "ms",
+            "4",
+            "ms",
+            "6",
+            "ms",
+            "103.96.246.209"
+          ]
+        },
+        {
+          "hop": "3",
+          "details": [
+            "3",
+            "ms",
+            "4",
+            "ms",
+            "4",
+            "ms",
+            "103.96.244.3"
+          ]
+        },
+        {
+          "hop": "4",
+          "details": [
+            "4",
+            "ms",
+            "4",
+            "ms",
+            "3",
+            "ms",
+            "202.166.197.157"
+          ]
+        },
+        {
+          "hop": "5",
+          "details": [
+            "6",
+            "ms",
+            "7",
+            "ms",
+            "9",
+            "ms",
+            "72.9.128.65"
+          ]
+        },
+        {
+          "hop": "6",
+          "details": [
+            "1656",
+            "ms",
+            "1275",
+            "ms",
+            "1288",
+            "ms",
+            "103.225.212.15"
+          ]
+        },
+        {
+          "hop": "7",
+          "details": [
+            "22",
+            "ms",
+            "19",
+            "ms",
+            "19",
+            "ms",
+            "142.250.174.2"
+          ]
+        },
+        {
+          "hop": "8",
+          "details": [
+            "21",
+            "ms",
+            "19",
+            "ms",
+            "19",
+            "ms",
+            "192.178.83.245"
+          ]
+        },
+        {
+          "hop": "9",
+          "details": [
+            "24",
+            "ms",
+            "19",
+            "ms",
+            "19",
+            "ms",
+            "142.251.52.223"
+          ]
+        },
+        {
+          "hop": "10",
+          "details": [
+            "19",
+            "ms",
+            "18",
+            "ms",
+            "18",
+            "ms",
+            "8.8.8.8"
+          ]
+        },
+        {
+          "hop": "Trace",
+          "details": [
+            "complete."
+          ]
+        }
+      ]
+    },
+    "1.1.1.1": {
+      "hops": [
+        {
+          "hop": "1",
+          "details": [
+            "4",
+            "ms",
+            "3",
+            "ms",
+            "3",
+            "ms",
+            "192.168.100.1"
+          ]
+        },
+        {
+          "hop": "2",
+          "details": [
+            "6",
+            "ms",
+            "7",
+            "ms",
+            "3",
+            "ms",
+            "103.96.246.209"
+          ]
+        },
+        {
+          "hop": "3",
+          "details": [
+            "5",
+            "ms",
+            "3",
+            "ms",
+            "3",
+            "ms",
+            "103.96.244.3"
+          ]
+        },
+        {
+          "hop": "4",
+          "details": [
+            "9",
+            "ms",
+            "8",
+            "ms",
+            "5",
+            "ms",
+            "202.166.197.145"
+          ]
+        },
+        {
+          "hop": "5",
+          "details": [
+            "5",
+            "ms",
+            "4",
+            "ms",
+            "4",
+            "ms",
+            "202.79.40.142"
+          ]
+        },
+        {
+          "hop": "6",
+          "details": [
+            "Request",
+            "timed",
+            "out."
+          ]
+        },
+        {
+          "hop": "7",
+          "details": [
+            "3",
+            "ms",
+            "3",
+            "ms",
+            "3",
+            "ms",
+            "103.211.151.11"
+          ]
+        },
+        {
+          "hop": "8",
+          "details": [
+            "3",
+            "ms",
+            "3",
+            "ms",
+            "4",
+            "ms",
+            "1.1.1.1"
+          ]
+        },
+        {
+          "hop": "Trace",
+          "details": [
+            "complete."
+          ]
+        }
+      ]
+    }
+  }
+}

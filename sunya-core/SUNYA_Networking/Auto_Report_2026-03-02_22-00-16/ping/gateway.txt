@@ -1,0 +1,27 @@
+
+Pinging 192.168.100.1 with 1400 bytes of data:
+Reply from 192.168.100.1: bytes=1400 time=3ms TTL=64
+Reply from 192.168.100.1: bytes=1400 time=4ms TTL=64
+Reply from 192.168.100.1: bytes=1400 time=5ms TTL=64
+Reply from 192.168.100.1: bytes=1400 time=6ms TTL=64
+Reply from 192.168.100.1: bytes=1400 time=5ms TTL=64
+Reply from 192.168.100.1: bytes=1400 time=3ms TTL=64
+Reply from 192.168.100.1: bytes=1400 time=4ms TTL=64
+Reply from 192.168.100.1: bytes=1400 time=3ms TTL=64
+Reply from 192.168.100.1: bytes=1400 time=4ms TTL=64
+Reply from 192.168.100.1: bytes=1400 time=4ms TTL=64
+Reply from 192.168.100.1: bytes=1400 time=5ms TTL=64
+Reply from 192.168.100.1: bytes=1400 time=5ms TTL=64
+Reply from 192.168.100.1: bytes=1400 time=3ms TTL=64
+Reply from 192.168.100.1: bytes=1400 time=7ms TTL=64
+Reply from 192.168.100.1: bytes=1400 time=12ms TTL=64
+Reply from 192.168.100.1: bytes=1400 time=5ms TTL=64
+Reply from 192.168.100.1: bytes=1400 time=6ms TTL=64
+Reply from 192.168.100.1: bytes=1400 time=5ms TTL=64
+Reply from 192.168.100.1: bytes=1400 time=5ms TTL=64
+Reply from 192.168.100.1: bytes=1400 time=8ms TTL=64
+
+Ping statistics for 192.168.100.1:
+    Packets: Sent = 20, Received = 20, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 3ms, Maximum = 12ms, Average = 5ms

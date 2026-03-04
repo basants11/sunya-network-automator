@@ -1,0 +1,320 @@
+2026-03-02 23:15:57,452 - INFO - ============================================================
+2026-03-02 23:15:57,452 - INFO -   SUNYATSHOOT - Automatic Network Diagnostic Tool
+2026-03-02 23:15:57,452 - INFO - ============================================================
+2026-03-02 23:15:57,452 - INFO - Starting at: 2026-03-02 23:15:57
+2026-03-02 23:15:57,860 - INFO - Platform: Windows 10
+2026-03-02 23:15:57,861 - INFO - 
+2026-03-02 23:15:57,861 - INFO - Starting comprehensive network analysis...
+2026-03-02 23:15:57,861 - INFO - Creating report folder...
+2026-03-02 23:15:57,862 - INFO - Report folder created: C:\Users\basant\Desktop\SunyatShoot_Report_2026-03-02_23-15-57
+2026-03-02 23:15:57,862 - INFO - Starting quick network diagnostics...
+2026-03-02 23:15:57,862 - INFO - Running ping test...
+2026-03-02 23:15:57,862 - ERROR - Error running quick diagnostics: 'SunyaCore' object has no attribute 'ping_test'
+2026-03-02 23:15:57,862 - ERROR - Quick diagnostics failed
+2026-03-02 23:15:57,862 - ERROR - 
+Diagnostic failed! Check sunyatshoot.log for details
+2026-03-02 23:15:57,862 - INFO - 
+2026-03-02 23:15:57,862 - INFO - ============================================================
+2026-03-02 23:15:57,863 - INFO - Diagnostic session ended
+2026-03-02 23:15:57,863 - INFO - ============================================================
+2026-03-02 23:17:04,518 - INFO - ============================================================
+2026-03-02 23:17:04,519 - INFO -   SUNYATSHOOT - Automatic Network Diagnostic Tool
+2026-03-02 23:17:04,519 - INFO - ============================================================
+2026-03-02 23:17:04,519 - INFO - Starting at: 2026-03-02 23:17:04
+2026-03-02 23:17:04,598 - INFO - Platform: Windows 10
+2026-03-02 23:17:04,598 - INFO - 
+2026-03-02 23:17:04,599 - INFO - Starting comprehensive network analysis...
+2026-03-02 23:17:04,599 - INFO - Creating report folder...
+2026-03-02 23:17:04,599 - INFO - Report folder created: C:\Users\basant\Desktop\SunyatShoot_Report_2026-03-02_23-17-04
+2026-03-02 23:17:04,600 - INFO - Running complete diagnostic cycle...
+2026-03-02 23:17:04,600 - INFO - Starting full diagnostic cycle...
+2026-03-02 23:17:04,600 - INFO - Generating network fingerprint...
+2026-03-02 23:17:04,728 - INFO - Network fingerprint generated successfully
+2026-03-02 23:17:04,733 - INFO - Report directory created: SUNYA_Networking/Auto_Report_2026-03-02_23-17-04
+2026-03-02 23:17:04,734 - INFO - Starting intelligent parallel diagnostics...
+2026-03-02 23:17:04,735 - INFO - Checking network connectivity...
+2026-03-02 23:17:04,772 - INFO - Internet connectivity available
+2026-03-02 23:17:04,772 - INFO - Running quick initial tests...
+2026-03-02 23:17:04,773 - INFO - Testing DNS resolution...
+2026-03-02 23:17:04,774 - INFO - Checking gateway reachability...
+2026-03-02 23:17:04,786 - INFO - Quick pinging gateway (192.168.100.1)
+2026-03-02 23:17:04,786 - INFO - DNS resolution to google.com: 12.00ms
+2026-03-02 23:17:04,792 - INFO - gateway_check completed
+2026-03-02 23:17:04,792 - INFO - DNS resolution to cloudflare.com: 5.00ms
+2026-03-02 23:17:04,793 - INFO - dns_resolution completed
+2026-03-02 23:17:06,832 - INFO - Quick pinging google_dns (8.8.8.8)
+2026-03-02 23:17:08,948 - INFO - quick_ping completed
+2026-03-02 23:17:08,949 - INFO - Adjusting test depth based on initial results...
+2026-03-02 23:17:08,949 - INFO - Excellent network quality detected, switching to quick test mode
+2026-03-02 23:17:08,949 - INFO - Test depth set to: quick
+2026-03-02 23:17:08,949 - INFO - Selected 2 diagnostic tasks for quick depth
+2026-03-02 23:17:09,548 - INFO - Running traceroute to 8.8.8.8
+2026-03-02 23:17:09,554 - INFO - Pinging gateway (192.168.100.1)
+2026-03-02 23:17:09,555 - INFO - Pinging dns_1 (1%1)
+2026-03-02 23:17:09,556 - INFO - Pinging dns_2 (103.96.244.51)
+2026-03-02 23:17:09,556 - INFO - Pinging google_dns (8.8.8.8)
+2026-03-02 23:17:09,558 - INFO - Pinging cloudflare_dns (1.1.1.1)
+2026-03-02 23:17:09,581 - ERROR - Ping to dns_1 failed: Command '['ping', '-n', '10', '-l', '1400', '1%1']' returned non-zero exit status 1.
+2026-03-02 23:17:18,728 - INFO - ping completed successfully
+2026-03-02 23:17:32,591 - INFO - Running traceroute to 1.1.1.1
+2026-03-02 23:17:50,473 - INFO - traceroute completed successfully
+2026-03-02 23:17:50,497 - INFO - All diagnostics completed
+2026-03-02 23:17:50,500 - INFO - Test cache saved successfully
+2026-03-02 23:17:50,502 - INFO - Running intelligent analysis engine...
+2026-03-02 23:17:50,503 - INFO - Checking network connectivity...
+2026-03-02 23:17:50,525 - INFO - Internet connectivity available
+2026-03-02 23:17:50,525 - INFO - Detecting network patterns...
+2026-03-02 23:17:50,525 - INFO - Detected patterns: none
+2026-03-02 23:17:50,526 - INFO - Running intelligent analysis...
+2026-03-02 23:17:50,527 - INFO - Analysis completed successfully
+2026-03-02 23:17:50,528 - INFO - Analysis completed with 70.0% confidence
+2026-03-02 23:17:50,528 - INFO - Generating alerts...
+2026-03-02 23:17:50,528 - WARNING - No analysis results to generate alerts from
+2026-03-02 23:17:50,528 - INFO - Generating evidence integrity summary...
+2026-03-02 23:17:50,610 - INFO - Evidence integrity summary saved to SUNYA_Networking/Auto_Report_2026-03-02_23-17-04\evidence-integrity.json
+2026-03-02 23:17:50,611 - INFO - Generating PDF report...
+2026-03-02 23:17:50,830 - INFO - Running intelligent analysis engine...
+2026-03-02 23:17:50,830 - INFO - Checking network connectivity...
+2026-03-02 23:17:50,852 - INFO - Internet connectivity available
+2026-03-02 23:17:50,852 - INFO - Detecting network patterns...
+2026-03-02 23:17:50,853 - INFO - Detected patterns: none
+2026-03-02 23:17:50,853 - INFO - Running intelligent analysis...
+2026-03-02 23:17:50,854 - INFO - Analysis completed successfully
+2026-03-02 23:17:50,854 - INFO - Analysis completed with 70.0% confidence
+2026-03-02 23:17:50,855 - ERROR - PDF generation failed: 'latin-1' codec can't encode character '\u2022' in position 277: ordinal not in range(256)
+2026-03-02 23:17:50,856 - ERROR - PDF report generation failed
+2026-03-02 23:17:50,856 - ERROR - Failed to generate diagnostic report
+2026-03-02 23:17:50,856 - ERROR - 
+Diagnostic failed! Check sunyatshoot.log for details
+2026-03-02 23:17:50,856 - INFO - 
+2026-03-02 23:17:50,856 - INFO - ============================================================
+2026-03-02 23:17:50,857 - INFO - Diagnostic session ended
+2026-03-02 23:17:50,857 - INFO - ============================================================
+2026-03-02 23:18:40,275 - INFO - ============================================================
+2026-03-02 23:18:40,275 - INFO -   SUNYATSHOOT - Automatic Network Diagnostic Tool
+2026-03-02 23:18:40,275 - INFO - ============================================================
+2026-03-02 23:18:40,275 - INFO - Starting at: 2026-03-02 23:18:40
+2026-03-02 23:18:40,341 - INFO - Platform: Windows 10
+2026-03-02 23:18:40,341 - INFO - 
+2026-03-02 23:18:40,341 - INFO - Starting comprehensive network analysis...
+2026-03-02 23:18:40,341 - INFO - Creating report folder...
+2026-03-02 23:18:40,342 - INFO - Report folder created: C:\Users\basant\Desktop\SunyatShoot_Report_2026-03-02_23-18-40
+2026-03-02 23:18:40,342 - INFO - Running complete diagnostic cycle...
+2026-03-02 23:18:40,342 - INFO - Starting full diagnostic cycle...
+2026-03-02 23:18:40,342 - INFO - Generating network fingerprint...
+2026-03-02 23:18:40,540 - INFO - Network fingerprint generated successfully
+2026-03-02 23:18:40,544 - INFO - Report directory created: SUNYA_Networking/Auto_Report_2026-03-02_23-18-40
+2026-03-02 23:18:40,545 - INFO - Starting intelligent parallel diagnostics...
+2026-03-02 23:18:40,546 - INFO - Test cache loaded (valid)
+2026-03-02 23:18:40,546 - INFO - Checking network connectivity...
+2026-03-02 23:18:40,594 - INFO - Internet connectivity available
+2026-03-02 23:18:40,594 - INFO - Running quick initial tests...
+2026-03-02 23:18:40,596 - INFO - Testing DNS resolution...
+2026-03-02 23:18:40,596 - INFO - Checking gateway reachability...
+2026-03-02 23:18:40,600 - INFO - DNS resolution to google.com: 4.00ms
+2026-03-02 23:18:40,601 - INFO - DNS resolution to cloudflare.com: 1.00ms
+2026-03-02 23:18:40,601 - INFO - dns_resolution completed
+2026-03-02 23:18:40,605 - INFO - Quick pinging gateway (192.168.100.1)
+2026-03-02 23:18:40,611 - INFO - gateway_check completed
+2026-03-02 23:18:42,643 - INFO - Quick pinging google_dns (8.8.8.8)
+2026-03-02 23:18:44,684 - INFO - quick_ping completed
+2026-03-02 23:18:44,684 - INFO - Adjusting test depth based on initial results...
+2026-03-02 23:18:44,684 - INFO - Excellent network quality detected, switching to quick test mode
+2026-03-02 23:18:44,684 - INFO - Test depth set to: quick
+2026-03-02 23:18:44,684 - INFO - Selected 2 diagnostic tasks for quick depth
+2026-03-02 23:18:44,824 - INFO - Running traceroute to 8.8.8.8
+2026-03-02 23:18:44,828 - INFO - Pinging gateway (192.168.100.1)
+2026-03-02 23:18:44,829 - INFO - Pinging dns_1 (1%1)
+2026-03-02 23:18:44,829 - INFO - Pinging dns_2 (103.96.244.51)
+2026-03-02 23:18:44,830 - INFO - Pinging google_dns (8.8.8.8)
+2026-03-02 23:18:44,832 - INFO - Pinging cloudflare_dns (1.1.1.1)
+2026-03-02 23:18:44,847 - ERROR - Ping to dns_1 failed: Command '['ping', '-n', '10', '-l', '1400', '1%1']' returned non-zero exit status 1.
+2026-03-02 23:18:57,942 - INFO - ping completed successfully
+2026-03-02 23:19:08,106 - INFO - Running traceroute to 1.1.1.1
+2026-03-02 23:19:25,973 - INFO - traceroute completed successfully
+2026-03-02 23:19:25,988 - INFO - All diagnostics completed
+2026-03-02 23:19:25,989 - INFO - Test cache saved successfully
+2026-03-02 23:19:25,991 - INFO - Running intelligent analysis engine...
+2026-03-02 23:19:25,991 - INFO - Checking network connectivity...
+2026-03-02 23:19:26,034 - INFO - Internet connectivity available
+2026-03-02 23:19:26,034 - INFO - Detecting network patterns...
+2026-03-02 23:19:26,034 - INFO - Detected patterns: none
+2026-03-02 23:19:26,034 - INFO - Running intelligent analysis...
+2026-03-02 23:19:26,035 - INFO - Analysis completed successfully
+2026-03-02 23:19:26,035 - INFO - Analysis completed with 70.0% confidence
+2026-03-02 23:19:26,035 - INFO - Generating alerts...
+2026-03-02 23:19:26,035 - WARNING - No analysis results to generate alerts from
+2026-03-02 23:19:26,036 - INFO - Generating evidence integrity summary...
+2026-03-02 23:19:26,071 - INFO - Evidence integrity summary saved to SUNYA_Networking/Auto_Report_2026-03-02_23-18-40\evidence-integrity.json
+2026-03-02 23:19:26,071 - INFO - Generating PDF report...
+2026-03-02 23:19:26,129 - INFO - Running intelligent analysis engine...
+2026-03-02 23:19:26,130 - INFO - Checking network connectivity...
+2026-03-02 23:19:26,173 - INFO - Internet connectivity available
+2026-03-02 23:19:26,173 - INFO - Detecting network patterns...
+2026-03-02 23:19:26,173 - INFO - Detected patterns: none
+2026-03-02 23:19:26,173 - INFO - Running intelligent analysis...
+2026-03-02 23:19:26,174 - INFO - Analysis completed successfully
+2026-03-02 23:19:26,174 - INFO - Analysis completed with 70.0% confidence
+2026-03-02 23:19:26,175 - ERROR - PDF generation failed: 'latin-1' codec can't encode character '\u2022' in position 277: ordinal not in range(256)
+2026-03-02 23:19:26,175 - ERROR - PDF report generation failed
+2026-03-02 23:19:26,175 - WARNING - Failed to generate PDF report, but diagnostic data collected
+2026-03-02 23:19:26,175 - INFO - Full analysis completed successfully
+2026-03-02 23:19:26,209 - INFO - 
+Diagnostic completed successfully!
+2026-03-02 23:19:26,209 - INFO - Report saved to your desktop
+2026-03-02 23:19:26,209 - INFO - 
+2026-03-02 23:19:26,209 - INFO - ============================================================
+2026-03-02 23:19:26,210 - INFO - Diagnostic session ended
+2026-03-02 23:19:26,210 - INFO - ============================================================
+2026-03-02 23:25:31,638 - INFO - ============================================================
+2026-03-02 23:25:31,638 - INFO -   SUNYATSHOOT - Automatic Network Diagnostic Tool
+2026-03-02 23:25:31,638 - INFO - ============================================================
+2026-03-02 23:25:31,639 - INFO - Starting at: 2026-03-02 23:25:31
+2026-03-02 23:25:31,757 - INFO - Platform: Windows 10
+2026-03-02 23:25:31,757 - INFO - 
+2026-03-02 23:25:31,757 - INFO - Starting comprehensive network analysis...
+2026-03-02 23:25:31,757 - INFO - Creating report folder...
+2026-03-02 23:25:31,758 - INFO - Report folder created: C:\Users\basant\Desktop\SunyatShoot_Report_2026-03-02_23-25-31
+2026-03-02 23:25:31,758 - INFO - Running complete diagnostic cycle...
+2026-03-02 23:25:31,758 - INFO - Starting full diagnostic cycle...
+2026-03-02 23:25:31,758 - INFO - Generating network fingerprint...
+2026-03-02 23:25:32,080 - INFO - Network fingerprint generated successfully
+2026-03-02 23:25:32,084 - INFO - Report directory created: SUNYA_Networking/Auto_Report_2026-03-02_23-25-32
+2026-03-02 23:25:32,085 - INFO - Starting intelligent parallel diagnostics...
+2026-03-02 23:25:32,087 - INFO - Test cache loaded (valid)
+2026-03-02 23:25:32,087 - INFO - Checking network connectivity...
+2026-03-02 23:25:32,118 - INFO - Internet connectivity available
+2026-03-02 23:25:32,118 - INFO - Running quick initial tests...
+2026-03-02 23:25:32,129 - INFO - Testing DNS resolution...
+2026-03-02 23:25:32,131 - INFO - Checking gateway reachability...
+2026-03-02 23:25:32,135 - INFO - DNS resolution to google.com: 5.00ms
+2026-03-02 23:25:32,141 - INFO - Quick pinging gateway (192.168.100.1)
+2026-03-02 23:25:32,141 - INFO - DNS resolution to cloudflare.com: 6.00ms
+2026-03-02 23:25:32,143 - INFO - dns_resolution completed
+2026-03-02 23:25:32,146 - INFO - gateway_check completed
+2026-03-02 23:25:34,179 - INFO - Quick pinging google_dns (8.8.8.8)
+2026-03-02 23:25:36,236 - INFO - quick_ping completed
+2026-03-02 23:25:36,236 - INFO - Adjusting test depth based on initial results...
+2026-03-02 23:25:36,237 - INFO - Excellent network quality detected, switching to quick test mode
+2026-03-02 23:25:36,237 - INFO - Test depth set to: quick
+2026-03-02 23:25:36,237 - INFO - Selected 2 diagnostic tasks for quick depth
+2026-03-02 23:25:36,487 - INFO - Pinging gateway (192.168.100.1)
+2026-03-02 23:25:36,487 - INFO - Pinging dns_1 (1%1)
+2026-03-02 23:25:36,488 - INFO - Pinging dns_2 (103.96.244.51)
+2026-03-02 23:25:36,488 - INFO - Running traceroute to 8.8.8.8
+2026-03-02 23:25:36,488 - INFO - Pinging google_dns (8.8.8.8)
+2026-03-02 23:25:36,489 - INFO - Pinging cloudflare_dns (1.1.1.1)
+2026-03-02 23:25:36,507 - ERROR - Ping to dns_1 failed: Command '['ping', '-n', '10', '-l', '1400', '1%1']' returned non-zero exit status 1.
+2026-03-02 23:25:45,656 - INFO - ping completed successfully
+2026-03-02 23:25:56,666 - INFO - Running traceroute to 1.1.1.1
+2026-03-02 23:26:14,477 - INFO - traceroute completed successfully
+2026-03-02 23:26:14,494 - INFO - All diagnostics completed
+2026-03-02 23:26:14,495 - INFO - Test cache saved successfully
+2026-03-02 23:26:14,498 - INFO - Running intelligent analysis engine...
+2026-03-02 23:26:14,498 - INFO - Checking network connectivity...
+2026-03-02 23:26:14,537 - INFO - Internet connectivity available
+2026-03-02 23:26:14,537 - INFO - Detecting network patterns...
+2026-03-02 23:26:14,537 - INFO - Detected patterns: none
+2026-03-02 23:26:14,537 - INFO - Running intelligent analysis...
+2026-03-02 23:26:14,539 - INFO - Analysis completed successfully
+2026-03-02 23:26:14,539 - INFO - Analysis completed with 70.0% confidence
+2026-03-02 23:26:14,539 - INFO - Generating alerts...
+2026-03-02 23:26:14,539 - WARNING - No analysis results to generate alerts from
+2026-03-02 23:26:14,539 - INFO - Generating evidence integrity summary...
+2026-03-02 23:26:14,583 - INFO - Evidence integrity summary saved to SUNYA_Networking/Auto_Report_2026-03-02_23-25-32\evidence-integrity.json
+2026-03-02 23:26:14,583 - INFO - Generating PDF report...
+2026-03-02 23:26:14,673 - INFO - Running intelligent analysis engine...
+2026-03-02 23:26:14,673 - INFO - Checking network connectivity...
+2026-03-02 23:26:14,695 - INFO - Internet connectivity available
+2026-03-02 23:26:14,696 - INFO - Detecting network patterns...
+2026-03-02 23:26:14,696 - INFO - Detected patterns: none
+2026-03-02 23:26:14,696 - INFO - Running intelligent analysis...
+2026-03-02 23:26:14,698 - INFO - Analysis completed successfully
+2026-03-02 23:26:14,698 - INFO - Analysis completed with 70.0% confidence
+2026-03-02 23:26:14,699 - ERROR - PDF generation failed: 'latin-1' codec can't encode character '\u2022' in position 277: ordinal not in range(256)
+2026-03-02 23:26:14,700 - ERROR - PDF report generation failed
+2026-03-02 23:26:14,700 - WARNING - Failed to generate PDF report, but diagnostic data collected
+2026-03-02 23:26:14,700 - INFO - Full analysis completed successfully
+2026-03-02 23:26:14,732 - INFO - 
+Diagnostic completed successfully!
+2026-03-02 23:26:14,732 - INFO - Report saved to your desktop
+2026-03-02 23:26:14,732 - INFO - 
+2026-03-02 23:26:14,732 - INFO - ============================================================
+2026-03-02 23:26:14,732 - INFO - Diagnostic session ended
+2026-03-02 23:26:14,732 - INFO - ============================================================
+2026-03-03 07:10:16,622 - INFO - ============================================================
+2026-03-03 07:10:16,623 - INFO -   SUNYATSHOOT - Automatic Network Diagnostic Tool
+2026-03-03 07:10:16,623 - INFO - ============================================================
+2026-03-03 07:10:16,623 - INFO - Starting at: 2026-03-03 07:10:16
+2026-03-03 07:10:16,662 - INFO - Platform: Windows 10
+2026-03-03 07:10:16,662 - INFO - 
+2026-03-03 07:10:16,663 - INFO - Starting comprehensive network analysis...
+2026-03-03 07:10:16,663 - INFO - Creating report folder...
+2026-03-03 07:10:16,663 - INFO - Report folder created: C:\Users\basant\Desktop\SunyatShoot_Report_2026-03-03_07-10-16
+2026-03-03 07:10:16,663 - INFO - Running complete diagnostic cycle...
+2026-03-03 07:10:16,663 - INFO - Starting full diagnostic cycle...
+2026-03-03 07:10:16,663 - INFO - Generating network fingerprint...
+2026-03-03 07:10:16,745 - INFO - Network fingerprint generated successfully
+2026-03-03 07:10:16,747 - INFO - Report directory created: SUNYA_Networking/Auto_Report_2026-03-03_07-10-16
+2026-03-03 07:10:16,748 - INFO - Starting intelligent parallel diagnostics...
+2026-03-03 07:10:16,758 - INFO - Test cache expired
+2026-03-03 07:10:16,759 - INFO - Checking network connectivity...
+2026-03-03 07:10:16,808 - INFO - Internet connectivity available
+2026-03-03 07:10:16,808 - INFO - Running quick initial tests...
+2026-03-03 07:10:16,810 - INFO - Testing DNS resolution...
+2026-03-03 07:10:16,811 - INFO - Checking gateway reachability...
+2026-03-03 07:10:16,813 - INFO - DNS resolution to google.com: 2.63ms
+2026-03-03 07:10:16,820 - INFO - Quick pinging gateway (192.168.100.1)
+2026-03-03 07:10:16,823 - INFO - DNS resolution to cloudflare.com: 9.72ms
+2026-03-03 07:10:16,824 - INFO - dns_resolution completed
+2026-03-03 07:10:16,827 - INFO - gateway_check completed
+2026-03-03 07:10:18,865 - INFO - Quick pinging google_dns (8.8.8.8)
+2026-03-03 07:10:20,927 - INFO - quick_ping completed
+2026-03-03 07:10:20,928 - INFO - Adjusting test depth based on initial results...
+2026-03-03 07:10:20,929 - INFO - Excellent network quality detected, switching to quick test mode
+2026-03-03 07:10:20,929 - INFO - Test depth set to: quick
+2026-03-03 07:10:20,929 - INFO - Selected 2 diagnostic tasks for quick depth
+2026-03-03 07:10:21,209 - INFO - Pinging gateway (192.168.100.1)
+2026-03-03 07:10:21,210 - INFO - Running traceroute to 8.8.8.8
+2026-03-03 07:10:21,211 - INFO - Pinging dns_1 (1%1)
+2026-03-03 07:10:21,212 - INFO - Pinging dns_2 (103.96.244.51)
+2026-03-03 07:10:21,213 - INFO - Pinging google_dns (8.8.8.8)
+2026-03-03 07:10:21,213 - INFO - Pinging cloudflare_dns (1.1.1.1)
+2026-03-03 07:10:21,227 - ERROR - Ping to dns_1 failed: Command '['ping', '-n', '10', '-l', '1400', '1%1']' returned non-zero exit status 1.
+2026-03-03 07:10:30,327 - INFO - ping completed successfully
+2026-03-03 07:10:33,764 - INFO - Running traceroute to 1.1.1.1
+2026-03-03 07:10:51,464 - INFO - traceroute completed successfully
+2026-03-03 07:10:51,481 - INFO - All diagnostics completed
+2026-03-03 07:10:51,483 - INFO - Test cache saved successfully
+2026-03-03 07:10:51,484 - INFO - Running intelligent analysis engine...
+2026-03-03 07:10:51,484 - INFO - Checking network connectivity...
+2026-03-03 07:10:51,523 - INFO - Internet connectivity available
+2026-03-03 07:10:51,523 - INFO - Detecting network patterns...
+2026-03-03 07:10:51,524 - INFO - Detected patterns: none
+2026-03-03 07:10:51,524 - INFO - Running intelligent analysis...
+2026-03-03 07:10:51,526 - INFO - Analysis completed successfully
+2026-03-03 07:10:51,527 - INFO - Analysis completed with 70.0% confidence
+2026-03-03 07:10:51,527 - INFO - Generating alerts...
+2026-03-03 07:10:51,528 - WARNING - No analysis results to generate alerts from
+2026-03-03 07:10:51,528 - INFO - Generating evidence integrity summary...
+2026-03-03 07:10:51,562 - INFO - Evidence integrity summary saved to SUNYA_Networking/Auto_Report_2026-03-03_07-10-16\evidence-integrity.json
+2026-03-03 07:10:51,562 - INFO - Generating PDF report...
+2026-03-03 07:10:51,666 - INFO - Running intelligent analysis engine...
+2026-03-03 07:10:51,666 - INFO - Checking network connectivity...
+2026-03-03 07:10:51,696 - INFO - Internet connectivity available
+2026-03-03 07:10:51,697 - INFO - Detecting network patterns...
+2026-03-03 07:10:51,698 - INFO - Detected patterns: none
+2026-03-03 07:10:51,701 - INFO - Running intelligent analysis...
+2026-03-03 07:10:51,702 - INFO - Analysis completed successfully
+2026-03-03 07:10:51,703 - INFO - Analysis completed with 70.0% confidence
+2026-03-03 07:10:51,704 - ERROR - PDF generation failed: 'latin-1' codec can't encode character '\u2022' in position 277: ordinal not in range(256)
+2026-03-03 07:10:51,705 - ERROR - PDF report generation failed
+2026-03-03 07:10:51,705 - WARNING - Failed to generate PDF report, but diagnostic data collected
+2026-03-03 07:10:51,706 - INFO - Full analysis completed successfully
+2026-03-03 07:10:51,749 - INFO - 
+Diagnostic completed successfully!
+2026-03-03 07:10:51,749 - INFO - Report saved to your desktop
+2026-03-03 07:10:51,752 - INFO - 
+2026-03-03 07:10:51,754 - INFO - ============================================================
+2026-03-03 07:10:51,755 - INFO - Diagnostic session ended
+2026-03-03 07:10:51,756 - INFO - ============================================================
