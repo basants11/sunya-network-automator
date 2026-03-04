@@ -4,6 +4,27 @@
 
 Sunya Networking is a premium, enterprise-grade network diagnostics platform designed for ISPs, NOC teams, network engineers, and field technicians. It provides automatic, silent, and forensic-grade network diagnostics on both PC (Windows/Linux) and Android platforms.
 
+## 🎯 NEW: SUNYA Master v5.0.0 - Unified Diagnostic Tool
+
+**⚡ QUICK START: Run `run-sunya-master.bat` or see [README-SUNYA-MASTER.md](README-SUNYA-MASTER.md)**
+
+The new **SUNYA Master** combines all diagnostic tools into one powerful, unified platform:
+- ✅ Replaces all individual diagnostic scripts
+- ✅ Three test modes: Quick (30s), Standard (2min), Full (5min)
+- ✅ Multi-threaded parallel execution
+- ✅ Intelligent health scoring (A-F grade)
+- ✅ Organized reports with actionable recommendations
+
+### Migration Guide
+| Old Tool | Use Instead |
+|----------|-------------|
+| `sunyatshoot.py` | `sunya-master.py --quick` |
+| `comprehensive-network-diagnostic.py` | `sunya-master.py` |
+| `sunya-complete-diagnostic.py` | `sunya-master.py --full` |
+| `sunya-ultra.py` | `sunya-master.py --quick` |
+
+---
+
 ## Features
 
 ### 🚀 Automatic Diagnostics
